@@ -1,20 +1,36 @@
-import React from 'react';
+// src/components/Header.js
+import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
-import IconButton from '@mui/material/IconButton'; // Add this import
-import Badge from '@mui/material/Badge'; // Add this import
-import Myprofile from '../molecules/my_profile';
+import Badge from '@mui/material/Badge';
 import Hamburger from '../molecules/list';
 import FullScreen from '../atoms/full_screen';
 import Companylogo from '../atoms/company_logo';
 import Search from '../atoms/search';
 import Notification from '../atoms/notification';
 import Dayin from '../atoms/dayin';
-import Minimize from '../atoms/minimize';
+import WindowControls from '../atoms/minimize';
 
 function Header() {
-  // Define classes if needed for styling
-  const classes = {}; // Example: Define classes object
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  const handleMinimizeClick = () => {
+    setIsMinimized(true);
+  };
+
+  const handleMaximizeClick = () => {
+    setIsMaximized(!isMaximized);
+  };
+
+  const handleCloseClick = () => {
+    console.log('Window closed');
+    // You can add any additional logic needed for the close action
+  };
+
+  if (isMinimized) {
+    return null; // Return null when minimized
+  }
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -28,22 +44,24 @@ function Header() {
             <Search />
           </Box>
           <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-          <Minimize />
+            <WindowControls
+              onMinimize={handleMinimizeClick}
+              onMaximize={handleMaximizeClick}
+              onClose={handleCloseClick}
+            />
           </Box>
           <Box sx={{ flexGrow: 1 }} />
           <Box sx={{ display: { md: 'flex' } }}>
-          <Box sx={{margin: 'auto'}} >
-            <Dayin />
-          </Box>
-          <Box sx={{margin: 'auto 20px auto auto'}}> {/* Assuming classes is defined for styling */}
-            <Badge badgeContent={7} color="error" classes={{ badge: classes.badge }}>
-              <Notification />
-            </Badge>
-          </Box>
+            <Box sx={{ margin: 'auto' }}>
+              <Dayin />
+            </Box>
+            <Box sx={{ margin: 'auto 20px auto auto' }}>
+              <Badge badgeContent={7} color="error">
+                <Notification />
+              </Badge>
+            </Box>
             <Companylogo />
           </Box>
-
-         
         </Toolbar>
       </div>
     </Box>

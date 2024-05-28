@@ -34,8 +34,8 @@ const Welcome = () => {
     <div style={{ display: 'flex', width: '100%', height: '100vh' }}>
       <div style={{ width: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
       {WelcomeData.map((item, index) => (
-        <img style={{ width: '100%' }} src={Image2} alt="" />
-        // <img alt="" src={item.welcome.Images.welcome_bg_img} />
+        // <img style={{ width: '100%' }} src={Image2} alt="" />
+        <img alt="" src={item.welcome.Images.welcome_bg_gif1} />
       ))}
         <div style={{ position: 'absolute' }}>
         </div>

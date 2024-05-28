@@ -50,6 +50,20 @@ const CallsGrid = () => {
     fetchData();
   }, []);
 
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    if (!validateForm()) return;
+    rowToEdit === null
+      ? setRows([...rows, formState])
+      : setRows(
+          rows.map((currRow, idx) => {
+            if (idx !== rowToEdit) return currRow;
+            return formState;
+          })
+        );
+    setModalOpen(false);
+  };
   const toggleCheckboxes = () => {
     setShowCheckboxes(!showCheckboxes);
   };
@@ -255,6 +269,28 @@ const CallsGrid = () => {
             </div>
           </div>
         )}
+      {modalOpen && (
+        <div className="modal-container" onClick={e => { if (e.target.className === "modal-container") setModalOpen(false); }} style={{ height:'10vh' }}>
+          <div className="modal">
+            <form style={{ columnCount:'3' }}>
+              {Object.entries(showColumns).map(([key, value]) => (
+                value && key !== '_id' && (
+                  <div key={key} className="form-group">
+                    <label htmlFor={key}>{key.replace(/_/g, ' ')}</label>
+                    <input
+                      name={key}
+                      onChange={handleChange}
+                      value={formState[key]}
+                    />
+                  </div>
+                )
+              ))}
+              {errors && <div className="error">{`Please include: ${errors}`}</div>}
+              <button type="submit" className="btn" onClick={handleSubmit}>Submit</button>
+            </form>
+          </div>
+        </div>
+      )}
       <div className="table-wrapper">
         <table className="table">
           <thead>

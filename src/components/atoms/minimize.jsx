@@ -1,20 +1,24 @@
-import React, { useState } from 'react';
+// src/atoms/WindowControls.js
+import React from 'react';
+import IconButton from '@mui/material/IconButton';
+import MinimizeIcon from '@mui/icons-material/Minimize';
+import MaximizeIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import CloseIcon from '@mui/icons-material/Close';
 
-const Minimize = () => {
-    const [isMinimized, setIsMinimized] = useState(false);
-
-    const handleMinimize = () => {
-        setIsMinimized(!isMinimized);
-    };
-
-    return (
-        <div>
-            <button onClick={handleMinimize}>
-                {isMinimized ? 'Maximize' : 'Minimize'}
-            </button>
-            {!isMinimized && <p>This is the content to be minimized.</p>}
-        </div>
-    );
+const WindowControls = ({ onMinimize, onMaximize, onClose }) => {
+  return (
+    <>
+      <IconButton onClick={onMinimize}>
+        <MinimizeIcon />
+      </IconButton>
+      <IconButton onClick={onMaximize}>
+        <MaximizeIcon />
+      </IconButton>
+      <IconButton onClick={onClose}>
+        <CloseIcon />
+      </IconButton>
+    </>
+  );
 };
 
-export default Minimize;
+export default WindowControls;

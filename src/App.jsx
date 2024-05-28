@@ -4,6 +4,8 @@ import Loginpage from './components/pages/login_page';
 import Welcome from './components/pages/welcome';
 import Dashboard from './components/Dashboard/Dashboard';
 import Home from './components/pages/home';
+import Calls from './components/pages/calls';
+
 
 
 const App = () => {
@@ -11,6 +13,7 @@ const App = () => {
     <Router>
       <Routes>
         <Route path='/' element={<Loginpage/>} />
+        <Route path='/calls' element={<Calls />} />
         <Route path="/Welcome" element={<Welcome />} />
         <Route path="/home" element={<Home />} />
         <Route path="/Dashboard" element={<Dashboard/>} />
