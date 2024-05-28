@@ -3,70 +3,64 @@ import axios from 'axios';
 import { Container, Grid, Button, Dialog, DialogTitle, DialogContent, DialogActions, Checkbox, FormControlLabel, Box, CircularProgress } from '@mui/material';
 import config from '../../config/config';
 
-const AddFeature = ({ onSaveSelectedText }) => {
+const AddFeature = ({ onSaveSelectedText, storedSelectedTexts }) => {
   const [menuData, setMenuData] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedMenuItem, setSelectedMenuItem] = useState(null);
-  const [selectedTexts, setSelectedTexts] = useState([]);
+  const [selectedTexts, setSelectedTexts] = useState(storedSelectedTexts || []);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    axios.get(`${config.apiUrl}/menudata`)
-      .then((response) => {
-        console.log('Data received:', response.data);
+    const fetchMenuData = async () => {
+      try {
+        const response = await axios.get(`${config.apiUrl}/menudata`);
         setMenuData(response.data);
         setLoading(false);
-      })
-      .catch((error) => {
-        console.error('Error fetching data:', error);
+      } catch (error) {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchMenuData();
   }, []);
+
+  useEffect(() => {
+    setSelectedTexts(storedSelectedTexts);
+  }, [storedSelectedTexts]);
 
   const handleButtonClick = (menuItem) => {
     setSelectedMenuItem(menuItem);
     setOpen(true);
-    setSelectedTexts([]);
   };
 
   const handleClose = () => {
     setOpen(false);
   };
 
-  const handleSave = async () => {
-    if (!selectedMenuItem || !selectedMenuItem.menu || !selectedMenuItem.menu.menu_bar || !selectedMenuItem.menu.menu_bar.add_features_values) {
-      console.error('Selected menu item or its features are null or undefined');
-      return;
-    }
-
-    const selectedItems = Object.values(selectedMenuItem.menu.menu_bar.add_features_values).filter(value =>
-      selectedTexts.includes(value)
+  const handleSave = () => {
+    const uniqueSelectedTexts = selectedTexts.filter((text, index, self) =>
+      index === self.findIndex((t) => t.title === text.title)
     );
 
-    try {
-      await axios.post(`${config.apiUrl}/api/savetext`, { texts: selectedItems });
-      console.log('Selected texts saved:', selectedItems);
-      onSaveSelectedText(selectedItems); // Pass selected items to parent component
-      handleClose(); // Close the dialog box
-    } catch (error) {
-      console.error('Error saving selected texts:', error.response ? error.response.data : error.message);
-      setError(error.response ? error.response.data.error : 'An unexpected error occurred while saving selected texts');
-    }
+    onSaveSelectedText(uniqueSelectedTexts);
+    handleClose();
   };
 
-  const handleCheckboxChange = (value) => {
-    const isSelected = selectedTexts.includes(value);
-    if (isSelected) {
-      setSelectedTexts(selectedTexts.filter(item => item !== value));
+  const handleCheckboxChange = (title, checked) => {
+    let updatedSelectedTexts = [...selectedTexts];
+
+    if (checked) {
+      updatedSelectedTexts.push({ title, icon: selectedMenuItem.menu.menu_bar.add_features_values[title] });
     } else {
-      setSelectedTexts([...selectedTexts, value]);
+      updatedSelectedTexts = updatedSelectedTexts.filter(item => item.title !== title);
     }
+
+    setSelectedTexts(updatedSelectedTexts);
   };
 
   const handleSelectAll = () => {
-    const allValues = Object.values(selectedMenuItem.menu.menu_bar.add_features_values || {});
-    setSelectedTexts(allValues);
+    const allValues = Object.keys(selectedMenuItem.menu.menu_bar.add_features_values || {});
+    setSelectedTexts(allValues.map(title => ({ title, icon: selectedMenuItem.menu.menu_bar.add_features_values[title] })));
   };
 
   const handleReset = () => {
@@ -95,14 +89,29 @@ const AddFeature = ({ onSaveSelectedText }) => {
         <DialogTitle sx={{ textAlign: 'center' }}>Add Menus</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={1}>
-            {selectedMenuItem && selectedMenuItem.menu.menu_bar.add_features_values && Object.values(selectedMenuItem.menu.menu_bar.add_features_values).map((value, index) => (
+            {selectedMenuItem && selectedMenuItem.menu.menu_bar.add_features_values && Object.entries(selectedMenuItem.menu.menu_bar.add_features_values).map(([title, value], index) => (
               <Grid item xs={6} key={index}>
-                <Box sx={{ bgcolor: 'skyblue', borderRadius: 1, mb: 1, p: 1, display: 'flex', alignItems: 'center' }}>
-                  <Box sx={{ flexGrow: 1 }}>
-                    <p>{value}</p>
-                  </Box>
+                <Box
+                  sx={{
+                    bgcolor: 'skyblue',
+                    borderRadius: 2,
+                    mb: 1,
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    boxShadow: 3,
+                    transition: 'transform 0.3s, box-shadow 0.3s',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: 6
+                    }
+                  }}
+                >
+                  <img src={value} alt={title} style={{ width: '30px', height: 'auto', marginRight: '8px' }} />
+                  <span>{title}</span>
                   <FormControlLabel
-                    control={<Checkbox checked={selectedTexts.includes(value)} onChange={() => handleCheckboxChange(value)} />}
+                    control={<Checkbox checked={selectedTexts.some(item => item.title === title)} onChange={(e) => handleCheckboxChange(title, e.target.checked)} />}
                     label=""
                   />
                 </Box>
@@ -111,17 +120,12 @@ const AddFeature = ({ onSaveSelectedText }) => {
           </Grid>
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'center' }}>
-          <Button onClick={handleSelectAll}>Select All</Button>
-          <Button onClick={handleReset}>Reset</Button>
-          <Button onClick={handleSave}>Save</Button>
-          <Button onClick={handleClose}>Close</Button>
+          <Button onClick={handleSelectAll} sx={{ bgcolor: '#0057b7', color: 'white', '&:hover': { bgcolor: '#003f8a', color: 'white' } }}>Select All</Button>
+          <Button onClick={handleReset} sx={{ bgcolor: '#666666', color: 'white', '&:hover': { bgcolor: '#4d4d4d', color: 'white' } }}>Reset</Button>
+          <Button onClick={handleSave} sx={{ bgcolor: '#2e7d32', color: 'white', '&:hover': { bgcolor: '#1b5e20', color: 'white' } }}>Save</Button>
+          <Button onClick={handleClose} sx={{ bgcolor: '#d32f2f', color: 'white', '&:hover': { bgcolor: '#b71c1c', color: 'white' } }}>Close</Button>
         </DialogActions>
       </Dialog>
-      {error && (
-        <Box mt={2} textAlign="center" color="red">
-          {error}
-        </Box>
-      )}
     </Container>
   );
 };

@@ -22,8 +22,9 @@ const FireNav = styled(List)({
 
 export default function Myprofile({ backgroundColor }) {
   const [open, setOpen] = useState(false);
-  const [myprofileData, setMyprofileData] = useState([]);
   const menuRef = useRef(null);
+  const [myprofileData, setMyprofileData] = useState([]);
+
 
   useEffect(() => {
     axios.get(`${config.apiUrl}/menudata`)
@@ -67,7 +68,7 @@ export default function Myprofile({ backgroundColor }) {
   ];
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', justifyContent:'center'}}>
       <ThemeProvider
         theme={createTheme({
           components: {
@@ -80,8 +81,8 @@ export default function Myprofile({ backgroundColor }) {
           palette: {},
         })}
       >
-        <Paper elevation={0} sx={{ maxWidth: 256, backgroundColor: 'transparent' }}>
-          <FireNav component="nav" disablePadding className="FireNav" ref={menuRef}>
+        <div elevation={0} sx={{ maxWidth: 256, backgroundColor: 'transparent' }}>
+          <div component="nav" disablePadding className="FireNav" ref={menuRef}>
             {myprofileData.map((item, index) => (
               <ListItemButton
                 alignItems="flex-start"
@@ -92,11 +93,11 @@ export default function Myprofile({ backgroundColor }) {
                 style={{padding:'15px'}}
                 key={index}
               >
-                <div style={{outline: '#92f4c7 7px solid',borderRadius:'100px', }}>
+                <div style={{borderRadius:'100px', }}>
                 <Avatar
                   alt="Build"
                   src={item.menu.header.myprofile.profile_image}
-                  sx={{ width: 50, height: 50, outline: 'white 2px solid', }}
+                  sx={{ width: 40, height: 40, outline: 'white 2px solid', }}
                 /></div>
               </ListItemButton>
             ))}
@@ -114,7 +115,7 @@ export default function Myprofile({ backgroundColor }) {
                 }}
               >
                 {open && myprofileData[0].menu.header.myprofile && (
-                  <Box>
+                  <Box style={{display:'grid'}}>
                     {Object.keys(myprofileData[0].menu.header.myprofile)
                       .filter(key => key !== 'profile_image')
                       .map((key, index) => (
@@ -124,7 +125,7 @@ export default function Myprofile({ backgroundColor }) {
                           onClick={buttonFunctions[index]} // Set appropriate click handlers
                           style={index === 0 ? { borderBottom:'1px dashed black', paddingBottom:'10px'} : {}}
                         >
-                          <ListItemIcon sx={{ color: 'inherit', paddingLeft: '20px' }}  style={index === 0 ? { height:'40px', padding:'0px'} : {}}>
+                          <ListItemIcon sx={{ color: 'inherit', minWidth:'fit-content', marginRight:'15px' }}  style={index === 0 ? { height:'40px', padding:'0px'} : {}}>
                             <img src={myprofileData[0].menu.header.myprofile[key].icon} alt="" />
                           </ListItemIcon>
                           <ListItemText
@@ -137,8 +138,8 @@ export default function Myprofile({ backgroundColor }) {
                 )}
               </Box>
             </Box>
-          </FireNav>
-        </Paper>
+          </div>
+        </div>
       </ThemeProvider>
     </Box>
   );

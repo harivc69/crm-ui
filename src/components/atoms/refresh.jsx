@@ -37,7 +37,8 @@ const Refresh = () => {
               style={{ width: '30px', height: 'auto', cursor: 'pointer' }} // Adjust styling as needed
               onClick={handleRefresh} // Call handleRefresh function on click
             />
-          </Grid>
+            
+          </Grid> 
         ))}
       </Grid>
     </Container>

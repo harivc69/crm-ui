@@ -18,7 +18,7 @@ const Notification = () => {
   }, []);
 
   return (
-    <Container>
+    <div>
       <Grid container spacing={2}>
         {menuData.map((menuItem, index) => (
           <Grid item key={index}>
@@ -30,7 +30,7 @@ const Notification = () => {
           </Grid>
         ))}
       </Grid>
-    </Container>
+    </div>
   );
 };
 

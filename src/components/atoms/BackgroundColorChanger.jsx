@@ -18,15 +18,13 @@ const BackgroundColorChanger = ({ colors, onColorChange, isFullScreen }) => {
   }, [isFullScreen]);
 
   return (
-    <div>
+    <div style={{marginRight:'23em', marginTop:'-3rem', float:'right', position:'relative',zIndex:'10'}}>
       <img
         src={theme1}
         onClick={handleClick}
         style={{
           width: "30px",
           height: "auto",
-          marginLeft: "95%",
-          marginTop: marginTop,
         }}
         alt='img'
       />

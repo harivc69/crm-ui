@@ -82,7 +82,7 @@ export default function Hamburger() {
           palette: {},
         })}
       >
-        <Paper elevation={0} sx={{ maxWidth: 256, backgroundColor: 'transparent' }}>
+        <div elevation={0} sx={{ maxWidth: 256, backgroundColor: 'transparent' }}>
           <FireNav component="nav" disablePadding className="FireNav" ref={menuRef}>
             {hamburgerData.map((item, index) => (
               <ListItemButton
@@ -97,7 +97,7 @@ export default function Hamburger() {
                 <img
                   alt={item.menu.header.hamburger.title} // Provide meaningful alt text
                   src={item.menu.header.hamburger.hamburger_image}
-                  style={{ height: 20, padding:'30px 25px' }}
+                  style={{ height: 20, padding:'30px 15px' }}
                 />
               </ListItemButton>
             ))}
@@ -193,7 +193,7 @@ export default function Hamburger() {
               </Box>
             </Box>
           </FireNav>
-        </Paper>
+        </div>
       </ThemeProvider>
     </Box>
   );

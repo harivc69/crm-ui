@@ -1,5 +1,7 @@
-// AddWidget.js
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import config from '../../config/config';
+
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Select from '@mui/material/Select';
@@ -8,6 +10,18 @@ import { autocompleteClasses } from '@mui/material';
 
 function AddWidget({ onClose, backgroundColor }) {
   const [selectedOption, setSelectedOption] = React.useState('');
+  const [widgetData, setWidgetData] = useState([]);
+
+  useEffect(() => {
+    axios.get(`${config.apiUrl}/menudata`)
+      .then((response) => {
+        console.log('Widget data received:', response.data);
+        setWidgetData(response.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching widget data:', error);
+      });
+  }, []);
 
   const handleChange = (event) => {
     setSelectedOption(event.target.value);
@@ -63,14 +77,17 @@ function AddWidget({ onClose, backgroundColor }) {
           <MenuItem value="" disabled>
             Select an option
           </MenuItem>
-          <MenuItem value="Option 1">
-            <img src="path_to_image_1" alt="Option 1" style={{ marginRight: 8, height: 20 }} />
+          <MenuItem value="Calls">
+            <img src="https://workiy-crm-images.s3.us-east-2.amazonaws.com/Common+Images+of+CRM/call.png" alt="Option 1" style={{ marginRight: 8, height: 20 }} />
+            <li style={{listStyle:'none'}}>Calls</li>
           </MenuItem>
-          <MenuItem value="Option 2">
-            <img src="path_to_image_2" alt="Option 2" style={{ marginRight: 8, height: 20 }} />
+          <MenuItem value="Enquiry">
+            <img src="https://workiy-crm-images.s3.us-east-2.amazonaws.com/Common+Images+of+CRM/call_merge.png" alt="Option 2" style={{ marginRight: 8, height: 20 }} />
+            <li style={{listStyle:'none'}}>Enquiry</li>
           </MenuItem>
-          <MenuItem value="Option 3">
-            <img src="path_to_image_3" alt="Option 3" style={{ marginRight: 8, height: 20 }} />
+          <MenuItem value="Leads">
+            <img src="https://workiy-crm-images.s3.us-east-2.amazonaws.com/Common+Images+of+CRM/chat_on.png" alt="Option 3" style={{ marginRight: 8, height: 20 }} />
+            <li style={{listStyle:'none'}}>Leads</li>
           </MenuItem>
         </Select>
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 36 }}>

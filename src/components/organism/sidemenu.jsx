@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Avatar, Typography } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import Myprofile from '../molecules/my_profile';
 import config from '../../config/config';
 import axios from 'axios';
 
@@ -37,6 +38,8 @@ const SideMenu = () => {
   };
 
   return (
+    <div style={{backgroundColor: "#0d2d4e"}}>
+      <Myprofile />
     <div style={{ width: 'fit-content', textAlign: 'center', margin: 'auto' }}>
       {menuItems.map((menuItem, index) => {
         const isSelected = selectedOptionIndex === index || (location.pathname === "/" && index === 0);
@@ -46,23 +49,41 @@ const SideMenu = () => {
             style={{
               display: 'block',
               textAlign: 'center',
+              zIndex:'3',
               gap: '50px',
-              marginTop: '70px',
+              marginTop: '20px',
               position: 'relative',
               transition: 'transform 0.3s ease',
               transform: isSelected ? 'scale(1.1)' : 'scale(1)',
+              padding:'2px',
+              backgroundColor: isSelected ? '#ff3f14' : '',
+              borderRadius:'5px'
             }}
             onClick={() => handleOptionClick(menuItem.path, index)}
            
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = isSelected ? 'scale(1.1)' : 'scale(1)'}
+            // onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+            // onMouseLeave={(e) => e.currentTarget.style.transform = isSelected ? 'scale(1.1)' : 'scale(1)'}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.1)';
+              // e.currentTarget.style.backgroundColor = '#ff3f14';
+              e.currentTarget.style.fontSize = '10px';
+
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = isSelected ? 'scale(1.1)' : 'scale(1)';
+              // e.currentTarget.style.backgroundColor = '';
+              e.currentTarget.style.fontSize = '13px';
+
+            }}
           >
             <Avatar
-              src={isSelected ? menuItem.selected_icon : menuItem.icon}
+              // src={isSelected ? menuItem.selected_icon : menuItem.icon}
+              src={menuItem.icon}
+
               alt={menuItem.title}
               sx={{
-                width: 30,
-                height: 30,
+                width: 20,
+                height: 20,
                 cursor: 'pointer',
                 borderRadius: '0',
                 margin: '10px',
@@ -71,11 +92,9 @@ const SideMenu = () => {
             <Typography
               variant="body2"
               sx={{
-                position: 'absolute',
-                bottom: '-30px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                color: isSelected ? '#00AEF8' : '#000000',
+                fontSize:'10px !important',
+                // color: isSelected ? '#00AEF8' : 'white',
+                color: 'white',
                 transition: 'color 0.3s ease',
               }}
             >
@@ -84,6 +103,7 @@ const SideMenu = () => {
           </div>
         );
       })}
+    </div>
     </div>
   );
 };

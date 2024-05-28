@@ -44,7 +44,7 @@ const Dayin = () => {
         <Grid container spacing={2}>
           {menuData.map((menuItem, index) => (
             <Grid item key={index}>
-              <h5 style={{ backgroundColor: 'green', padding: '3px', borderRadius: "5px", width: "70px", textAlign: "center", }}>{menuItem.menu.menu_bar.menu_text.title}</h5>
+              <h5 style={{ backgroundColor: 'green', padding: '5px', borderRadius: "5px", width: "50px",fontSize:'12px', textAlign: "center", }}>{menuItem.menu.menu_bar.menu_text.title}</h5>
             </Grid>
           ))}
         </Grid>

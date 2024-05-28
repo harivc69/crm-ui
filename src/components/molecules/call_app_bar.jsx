@@ -1,763 +1,268 @@
 import React, { useState, useEffect } from "react";
-import { BsFillPencilFill } from "react-icons/bs";
-import "./CallsGrid.css";
+import axios from 'axios';
+import config from '../../config/config';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined';
+import CloseIcon from '@mui/icons-material/Close';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import DownloadDoneRoundedIcon from '@mui/icons-material/DownloadDoneRounded';
+import AddTaskRoundedIcon from '@mui/icons-material/AddTaskRounded';
+import "../../assets/styles/callsgrid.css";
+import Dropdown from '../atoms/dropdown';
+import ActionButton from '../atoms/actionbutton';
+import Pagination from '../atoms/pagination';
+import Callfilter from "../atoms/callfilter";
+
 
 const CallsGrid = () => {
+  const [searchQuery, setSearchQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [rows, setRows] = useState([
-    {
-      userName: "Tim",
-      phoneNumber: "1234567890",
-      callType: "Inbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-24T12:00",
-      duration: "00:05:00",
-      assignedTo: "John",
-      landingNumber: "9876543210"
-    },
-    {
-      userName: "Alice",
-      phoneNumber: "9876543210",
-      callType: "Outbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-25T10:30",
-      duration: "00:10:00",
-      assignedTo: "Jane",
-      landingNumber: "1234567890"
-    },
-    {
-      userName: "John",
-      phoneNumber: "5555555555",
-      callType: "Inbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-26T09:00",
-      duration: "00:08:00",
-      assignedTo: "Alex",
-      landingNumber: "6666666666"
-    },
-    {
-      userName: "Sarah",
-      phoneNumber: "7777777777",
-      callType: "Outbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-27T15:45",
-      duration: "00:07:30",
-      assignedTo: "Emily",
-      landingNumber: "8888888888"
-    },
-    {
-      userName: "Tim",
-      phoneNumber: "1234567890",
-      callType: "Inbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-24T12:00",
-      duration: "00:05:00",
-      assignedTo: "John",
-      landingNumber: "9876543210"
-    },
-    {
-      userName: "Alice",
-      phoneNumber: "9876543210",
-      callType: "Outbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-25T10:30",
-      duration: "00:10:00",
-      assignedTo: "Jane",
-      landingNumber: "1234567890"
-    },
-    {
-      userName: "John",
-      phoneNumber: "5555555555",
-      callType: "Inbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-26T09:00",
-      duration: "00:08:00",
-      assignedTo: "Alex",
-      landingNumber: "6666666666"
-    },
-    {
-      userName: "Sarah",
-      phoneNumber: "7777777777",
-      callType: "Outbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-27T15:45",
-      duration: "00:07:30",
-      assignedTo: "Emily",
-      landingNumber: "8888888888"
-    },
-    {
-      userName: "Tim",
-      phoneNumber: "1234567890",
-      callType: "Inbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-24T12:00",
-      duration: "00:05:00",
-      assignedTo: "John",
-      landingNumber: "9876543210"
-    },
-    {
-      userName: "Alice",
-      phoneNumber: "9876543210",
-      callType: "Outbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-25T10:30",
-      duration: "00:10:00",
-      assignedTo: "Jane",
-      landingNumber: "1234567890"
-    },
-    {
-      userName: "John",
-      phoneNumber: "5555555555",
-      callType: "Inbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-26T09:00",
-      duration: "00:08:00",
-      assignedTo: "Alex",
-      landingNumber: "6666666666"
-    },
-    {
-      userName: "Sarah",
-      phoneNumber: "7777777777",
-      callType: "Outbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-27T15:45",
-      duration: "00:07:30",
-      assignedTo: "Emily",
-      landingNumber: "8888888888"
-    },
-    {
-      userName: "Tim",
-      phoneNumber: "1234567890",
-      callType: "Inbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-24T12:00",
-      duration: "00:05:00",
-      assignedTo: "John",
-      landingNumber: "9876543210"
-    },
-    {
-      userName: "Alice",
-      phoneNumber: "9876543210",
-      callType: "Outbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-25T10:30",
-      duration: "00:10:00",
-      assignedTo: "Jane",
-      landingNumber: "1234567890"
-    },
-    {
-      userName: "John",
-      phoneNumber: "5555555555",
-      callType: "Inbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-26T09:00",
-      duration: "00:08:00",
-      assignedTo: "Alex",
-      landingNumber: "6666666666"
-    },
-    {
-      userName: "Sarah",
-      phoneNumber: "7777777777",
-      callType: "Outbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-27T15:45",
-      duration: "00:07:30",
-      assignedTo: "Emily",
-      landingNumber: "8888888888"
-    },
-    {
-      userName: "Tim",
-      phoneNumber: "1234567890",
-      callType: "Inbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-24T12:00",
-      duration: "00:05:00",
-      assignedTo: "John",
-      landingNumber: "9876543210"
-    },
-    {
-      userName: "Alice",
-      phoneNumber: "9876543210",
-      callType: "Outbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-25T10:30",
-      duration: "00:10:00",
-      assignedTo: "Jane",
-      landingNumber: "1234567890"
-    },
-    {
-      userName: "John",
-      phoneNumber: "5555555555",
-      callType: "Inbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-26T09:00",
-      duration: "00:08:00",
-      assignedTo: "Alex",
-      landingNumber: "6666666666"
-    },
-    {
-      userName: "Sarah",
-      phoneNumber: "7777777777",
-      callType: "Outbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-27T15:45",
-      duration: "00:07:30",
-      assignedTo: "Emily",
-      landingNumber: "8888888888"
-    },
-    {
-      userName: "Tim",
-      phoneNumber: "1234567890",
-      callType: "Inbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-24T12:00",
-      duration: "00:05:00",
-      assignedTo: "John",
-      landingNumber: "9876543210"
-    },
-    {
-      userName: "Alice",
-      phoneNumber: "9876543210",
-      callType: "Outbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-25T10:30",
-      duration: "00:10:00",
-      assignedTo: "Jane",
-      landingNumber: "1234567890"
-    },
-    {
-      userName: "John",
-      phoneNumber: "5555555555",
-      callType: "Inbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-26T09:00",
-      duration: "00:08:00",
-      assignedTo: "Alex",
-      landingNumber: "6666666666"
-    },
-    {
-      userName: "Sarah",
-      phoneNumber: "7777777777",
-      callType: "Outbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-27T15:45",
-      duration: "00:07:30",
-      assignedTo: "Emily",
-      landingNumber: "8888888888"
-    },
-    {
-      userName: "Tim",
-      phoneNumber: "1234567890",
-      callType: "Inbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-24T12:00",
-      duration: "00:05:00",
-      assignedTo: "John",
-      landingNumber: "9876543210"
-    },
-    {
-      userName: "Alice",
-      phoneNumber: "9876543210",
-      callType: "Outbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-25T10:30",
-      duration: "00:10:00",
-      assignedTo: "Jane",
-      landingNumber: "1234567890"
-    },
-    {
-      userName: "John",
-      phoneNumber: "5555555555",
-      callType: "Inbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-26T09:00",
-      duration: "00:08:00",
-      assignedTo: "Alex",
-      landingNumber: "6666666666"
-    },
-    {
-      userName: "Sarah",
-      phoneNumber: "7777777777",
-      callType: "Outbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-27T15:45",
-      duration: "00:07:30",
-      assignedTo: "Emily",
-      landingNumber: "8888888888"
-    },
-    {
-      userName: "Tim",
-      phoneNumber: "1234567890",
-      callType: "Inbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-24T12:00",
-      duration: "00:05:00",
-      assignedTo: "John",
-      landingNumber: "9876543210"
-    },
-    {
-      userName: "Alice",
-      phoneNumber: "9876543210",
-      callType: "Outbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-25T10:30",
-      duration: "00:10:00",
-      assignedTo: "Jane",
-      landingNumber: "1234567890"
-    },
-    {
-      userName: "John",
-      phoneNumber: "5555555555",
-      callType: "Inbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-26T09:00",
-      duration: "00:08:00",
-      assignedTo: "Alex",
-      landingNumber: "6666666666"
-    },
-    {
-      userName: "Sarah",
-      phoneNumber: "7777777777",
-      callType: "Outbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-27T15:45",
-      duration: "00:07:30",
-      assignedTo: "Emily",
-      landingNumber: "8888888888"
-    },
-    {
-      userName: "Tim",
-      phoneNumber: "1234567890",
-      callType: "Inbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-24T12:00",
-      duration: "00:05:00",
-      assignedTo: "John",
-      landingNumber: "9876543210"
-    },
-    {
-      userName: "Alice",
-      phoneNumber: "9876543210",
-      callType: "Outbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-25T10:30",
-      duration: "00:10:00",
-      assignedTo: "Jane",
-      landingNumber: "1234567890"
-    },
-    {
-      userName: "John",
-      phoneNumber: "5555555555",
-      callType: "Inbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-26T09:00",
-      duration: "00:08:00",
-      assignedTo: "Alex",
-      landingNumber: "6666666666"
-    },
-    {
-      userName: "Sarah",
-      phoneNumber: "7777777777",
-      callType: "Outbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-27T15:45",
-      duration: "00:07:30",
-      assignedTo: "Emily",
-      landingNumber: "8888888888"
-    },
-    {
-      userName: "Tim",
-      phoneNumber: "1234567890",
-      callType: "Inbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-24T12:00",
-      duration: "00:05:00",
-      assignedTo: "John",
-      landingNumber: "9876543210"
-    },
-    {
-      userName: "Alice",
-      phoneNumber: "9876543210",
-      callType: "Outbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-25T10:30",
-      duration: "00:10:00",
-      assignedTo: "Jane",
-      landingNumber: "1234567890"
-    },
-    {
-      userName: "John",
-      phoneNumber: "5555555555",
-      callType: "Inbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-26T09:00",
-      duration: "00:08:00",
-      assignedTo: "Alex",
-      landingNumber: "6666666666"
-    },
-    {
-      userName: "Sarah",
-      phoneNumber: "7777777777",
-      callType: "Outbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-27T15:45",
-      duration: "00:07:30",
-      assignedTo: "Emily",
-      landingNumber: "8888888888"
-    },
-    {
-      userName: "Tim",
-      phoneNumber: "1234567890",
-      callType: "Inbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-24T12:00",
-      duration: "00:05:00",
-      assignedTo: "John",
-      landingNumber: "9876543210"
-    },
-    {
-      userName: "Alice",
-      phoneNumber: "9876543210",
-      callType: "Outbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-25T10:30",
-      duration: "00:10:00",
-      assignedTo: "Jane",
-      landingNumber: "1234567890"
-    },
-    {
-      userName: "John",
-      phoneNumber: "5555555555",
-      callType: "Inbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-26T09:00",
-      duration: "00:08:00",
-      assignedTo: "Alex",
-      landingNumber: "6666666666"
-    },
-    {
-      userName: "Sarah",
-      phoneNumber: "7777777777",
-      callType: "Outbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-27T15:45",
-      duration: "00:07:30",
-      assignedTo: "Emily",
-      landingNumber: "8888888888"
-    },
-    {
-      userName: "Tim",
-      phoneNumber: "1234567890",
-      callType: "Inbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-24T12:00",
-      duration: "00:05:00",
-      assignedTo: "John",
-      landingNumber: "9876543210"
-    },
-    {
-      userName: "Alice",
-      phoneNumber: "9876543210",
-      callType: "Outbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-25T10:30",
-      duration: "00:10:00",
-      assignedTo: "Jane",
-      landingNumber: "1234567890"
-    },
-    {
-      userName: "John",
-      phoneNumber: "5555555555",
-      callType: "Inbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-26T09:00",
-      duration: "00:08:00",
-      assignedTo: "Alex",
-      landingNumber: "6666666666"
-    },
-    {
-      userName: "Sarah",
-      phoneNumber: "7777777777",
-      callType: "Outbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-27T15:45",
-      duration: "00:07:30",
-      assignedTo: "Emily",
-      landingNumber: "8888888888"
-    },
-    {
-      userName: "Tim",
-      phoneNumber: "1234567890",
-      callType: "Inbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-24T12:00",
-      duration: "00:05:00",
-      assignedTo: "John",
-      landingNumber: "9876543210"
-    },
-    {
-      userName: "Alice",
-      phoneNumber: "9876543210",
-      callType: "Outbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-25T10:30",
-      duration: "00:10:00",
-      assignedTo: "Jane",
-      landingNumber: "1234567890"
-    },
-    {
-      userName: "John",
-      phoneNumber: "5555555555",
-      callType: "Inbound",
-      callStatus: "Answered",
-      dateTime: "2024-04-26T09:00",
-      duration: "00:08:00",
-      assignedTo: "Alex",
-      landingNumber: "6666666666"
-    },
-    {
-      userName: "Sarah",
-      phoneNumber: "7777777777",
-      callType: "Outbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-27T15:45",
-      duration: "00:07:30",
-      assignedTo: "Emily",
-      landingNumber: "8888888888"
-    },
-    {
-      userName: "Sarah",
-      phoneNumber: "7777777777",
-      callType: "Outbound",
-      callStatus: "Missed",
-      dateTime: "2024-04-27T15:45",
-      duration: "00:07:30",
-      assignedTo: "Emily",
-      landingNumber: "8888888888"
-    },
-  ]);
+  const [rows, setRows] = useState([]);
   const [rowToEdit, setRowToEdit] = useState(null);
-  const [formState, setFormState] = useState({
-    userName: "",
-    phoneNumber: "",
-    callType: "",
-    callStatus: "",
-    dateTime: "",
-    duration: "",
-    assignedTo: "",
-    landingNumber: ""
-  });
+  const [formState, setFormState] = useState({});
   const [errors, setErrors] = useState("");
-  const [showColumns, setShowColumns] = useState(() => {
-    // Retrieve the state from local storage or use the default state
-    const savedState = localStorage.getItem("showColumns");
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          userName: true,
-          phoneNumber: true,
-          callType: true,
-          callStatus: true,
-          dateTime: true,
-          duration: true,
-          assignedTo: true,
-          landingNumber: true
-        };
-  });
-  const [showCheckboxes, setShowCheckboxes] = useState(false); // Initially hidden
+  const [showCheckboxes, setShowCheckboxes] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
-  const [recordsPerPage, setRecordsPerPage] = useState(10); // Number of records to display per page
-
-  const totalPages = Math.ceil(rows.length / recordsPerPage);
-  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
-  const startIndex = (pageNumber - 1) * recordsPerPage;
-  const endIndex = pageNumber * recordsPerPage;
-
-  useEffect(() => {
-    if (rowToEdit !== null) {
-      // If editing a row, set the formState with the current values
-      setFormState(rows[rowToEdit]);
-    } else {
-      // If not editing, reset the formState
-      setFormState({
-        userName: "",
-        phoneNumber: "",
-        callType: "",
-        callStatus: "",
-        dateTime: "",
-        duration: "",
-        assignedTo: "",
-        landingNumber: ""
-      });
-    }
-  }, [rowToEdit, rows]);
+  const [recordsPerPage, setRecordsPerPage] = useState(20); // Changed records per page to 20
+  const [showColumns, setShowColumns] = useState({});
+  const [selectedFields, setSelectedFields] = useState([]);
+  const [selectedLetter, setSelectedLetter] = useState(null);
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
   useEffect(() => {
-    localStorage.setItem("showColumns", JSON.stringify(showColumns));
-  }, [showColumns]);
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(`${config.apiUrl}/UserInfodata`);
+        const initialShowColumnsState = {};
+        response.data.forEach(row => {
+          Object.keys(row).forEach(key => {
+            if (!initialShowColumnsState.hasOwnProperty(key) && key !== "_id") {
+              initialShowColumnsState[key] = true;
+            }
+          });
+        });
+        setShowColumns(initialShowColumnsState);
+        setRows(response.data);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+    fetchData();
+  }, []);
 
-  const handleDeleteRow = targetIndex => {
-    setRows(rows.filter((_, idx) => idx !== targetIndex));
-  };
-
-  const handleEditRow = idx => {
-    setRowToEdit(idx);
-    setModalOpen(true);
-  };
-
-  const handleChange = e => {
-    setFormState({ ...formState, [e.target.name]: e.target.value });
+  const toggleCheckboxes = () => {
+    setShowCheckboxes(!showCheckboxes);
   };
 
   const handleCheckboxChange = columnName => {
     setShowColumns({ ...showColumns, [columnName]: !showColumns[columnName] });
   };
 
-  const toggleCheckboxes = () => {
-    setShowCheckboxes(!showCheckboxes); // Toggle visibility of checkboxes
+  const handleChange = e => {
+    setFormState({ ...formState, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = e => {
+  const handleSave = async e => {
     e.preventDefault();
-
     if (!validateForm()) return;
-
-    rowToEdit === null
-      ? setRows([...rows, formState])
-      : setRows(
-          rows.map((currRow, idx) => {
-            if (idx !== rowToEdit) return currRow;
-            return formState;
-          })
-        );
-
-    setModalOpen(false);
+    try {
+      if (rowToEdit === null) {
+        await axios.post(`${config.apiUrl}/UserInfodata`, formState);
+        setRows([...rows, formState]);
+      } else {
+        await axios.put(`${config.apiUrl}/UserInfodata/${formState._id}`, formState);
+        setRows(rows.map((currRow, idx) => {
+          if (idx !== rowToEdit) return currRow;
+          return formState;
+        }));
+      }
+      setModalOpen(false);
+    } catch (error) {
+      console.error('Error saving user data:', error);
+    }
   };
 
   const validateForm = () => {
-    if (
-      formState.userName &&
-      formState.phoneNumber &&
-      formState.callType &&
-      formState.callStatus &&
-      formState.dateTime &&
-      formState.duration &&
-      formState.assignedTo &&
-      formState.landingNumber
-    ) {
-      setErrors("");
-      return true;
-    } else {
-      let errorFields = [];
-      for (const [key, value] of Object.entries(formState)) {
-        if (!value) {
-          errorFields.push(key);
-        }
-      }
-      setErrors(errorFields.join(", "));
+    const requiredFields = [
+      'caller_number', 'start_time', 'call_duration', 'recording_url', 'call_direction', 'source_id',
+      'assigned_to', 'call_status', 'call_source', 'provider_name', 'extension_user', 'caller_from',
+      'caller_to', 'recording_file_name', 'landing_number', 'call_recording_file', 'comments', 'created_by'
+    ];
+    const errors = requiredFields.filter(field => !formState[field]);
+    if (errors.length) {
+      setErrors(`The following fields are required: ${errors.join(', ')}`);
       return false;
     }
+    setErrors("");
+    return true;
+  };
+
+  const totalPages = Math.ceil(rows.length / recordsPerPage);
+  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
+  const startIndex = (pageNumber - 1) * recordsPerPage;
+  const endIndex = Math.min(pageNumber * recordsPerPage, rows.length);
+
+  const handleEditRow = idx => {
+    setRowToEdit(idx);
+    setModalOpen(true);
+    setFormState({ ...rows[idx] });
+  };
+
+  const handleSelectAll = () => {
+    const allFields = Object.keys(showColumns).filter(key => key !== '_id');
+    setSelectedFields(allFields);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedFields([]);
+  };
+
+  const handleApply = () => {
+    const updatedShowColumns = { ...showColumns };
+    selectedFields.forEach(field => {
+      updatedShowColumns[field] = true;
+    });
+    setShowColumns(updatedShowColumns);
+    setSelectedFields([]);
+    toggleCheckboxes();
   };
 
   return (
     <div className="CallsGrid">
-      <div>
-        <button onClick={toggleCheckboxes}>
-          {showCheckboxes ? "Hide Checkboxes" : "Show Checkboxes"}
+      <div className="Appbar">
+        <div>
+          <ActionButton/>
+        </div>
+        <div>
+        <Dropdown/>
+        </div>
+        <Callfilter />
+
+        <div>
+        <Pagination/>
+        </div>
+      
+      </div>
+      <div className="navbar">
+        <button onClick={toggleCheckboxes} className="icon-button">
+          <WidgetsOutlinedIcon />
         </button>
+        {alphabet.map(letter => (
+          <div
+            key={letter}
+            className={`letter ${selectedLetter === letter ? "selectedLetter" : ""}`}
+            onClick={() => setSelectedLetter(letter)}
+          >
+            {letter}
+          </div>
+        ))}
+      </div>
         {showCheckboxes && (
-          <div style={{
-            height:'auto',
-            width:'fit-content',
-            position:'absolute',
-            display:'flex',
-            flexDirection:'column',
-            justifyContent:'center',
-            background:'white',
-            borderRadius:'10px',
-            padding:'15px 25px',
-            boxShadow:'0px 0px 11px black'
-          }}>
-            <label>
-              <input
-                type="checkbox"
-                checked={showColumns.userName}
-                onChange={() => handleCheckboxChange("userName")}
-              />
-              User Name
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={showColumns.phoneNumber}
-                onChange={() => handleCheckboxChange("phoneNumber")}
-              />
-              Phone Number
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={showColumns.callType}
-                onChange={() => handleCheckboxChange("callType")}
-              />
-              Call Type
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={showColumns.callStatus}
-                onChange={() => handleCheckboxChange("callStatus")}
-              />
-              Call Status
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={showColumns.dateTime}
-                onChange={() => handleCheckboxChange("dateTime")}
-              />
-              Date and Time
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={showColumns.duration}
-                onChange={() => handleCheckboxChange("duration")}
-              />
-              Duration
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={showColumns.assignedTo}
-                onChange={() => handleCheckboxChange("assignedTo")}
-              />
-              Assigned To
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={showColumns.landingNumber}
-                onChange={() => handleCheckboxChange("landingNumber")}
-              />
-              Landing Number
-            </label>
+          <div style={{ width:'95%', display:'flex', justifyContent:'center', position:'absolute' }}>
+            <div style={{ background: 'white', borderRadius: '10px', boxShadow: '0px 0px 11px black', zIndex:10, width:'40rem' }}>
+              <div style={{ borderBottom:'2px solid #808080', fontSize:'20px', fontWeight:'bold', borderTopLeftRadius:'10px', borderTopRightRadius:'10px', padding:'3% 5%', display: 'flex', justifyContent: 'space-between' }}>
+                <span>Configure Columns - Calls</span>
+                <button onClick={toggleCheckboxes} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                  <CloseIcon />
+                </button>
+              </div>
+              <div style={{ display: 'flex' }}>
+                <div style={{ height: 'auto', width: '55%', position: 'relative', display: 'flex', flexDirection: 'column', padding: '15px 25px' }}>
+                  <div style={{ fontWeight: 'bold', padding: '10px', marginBottom: '10px', color:'#21252980' }}>
+                    Select Fields
+                  </div>
+                  <div className="scroll-bar" style={{ display: 'flex', flexDirection: 'column', height: '250px', overflow: 'auto' }}>
+                    {Object.entries(showColumns).map(([key, value]) => (
+                      key !== '_id' && value && (
+                        <label style={{ background:'#00AEF8', padding:'5px 10px', fontWeight:'500', marginBottom:'2px', marginRight:'5%', color: 'white', position: 'relative' }} id="selected_checkbox" key={key}>
+                          <input
+                            style={{ display:'none' }}
+                            type="checkbox"
+                            checked={value}
+                            onChange={() => handleCheckboxChange(key)}
+                          />
+                          {key.replace(/_/g, ' ')}
+                            <CloseRoundedIcon
+                              style={{
+                                position: 'absolute',
+                                top: '50%',
+                                right: '5px',
+                                transform: 'translateY(-50%)',
+                              }}
+                            />
+                        </label>
+                      )
+                    ))}
+                  </div>
+                </div>
+                <div style={{ height: 'auto', width: '45%', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '15px 25px' }}>
+                  <div style={{ fontWeight: 'bold', padding: '10px', marginBottom: '10px', color:'#21252980' }}>
+                    Available Fields
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{ marginBottom: '10px', height:'30px' }}
+                  />
+                  <div className="scroll-bar" style={{ display: 'flex', flexDirection: 'column', height: '250px', overflow: 'auto' }}>
+                    {Object.entries(showColumns).filter(([key]) => key.toLowerCase().includes(searchQuery.toLowerCase())).map(([key, value]) => (
+                      key !== '_id' && !value && (
+                        <label style={{marginBottom:'1px', marginRight:'5%', color:selectedFields.includes(key) ?'white' :'#21252980', padding: selectedFields.includes(key) ?'7px' : '3px', fontWeight:'500', backgroundColor: selectedFields.includes(key) ? '#12E5E5' : 'white', position: 'relative' }} id="available_checkbox" key={key}>
+                          <input
+                            style={{ display:'none' }}
+                            type="checkbox"
+                            checked={selectedFields.includes(key)}
+                            onChange={() => {
+                              const updatedSelectedFields = [...selectedFields];
+                              const fieldIndex = updatedSelectedFields.indexOf(key);
+                              if (fieldIndex === -1) {
+                                updatedSelectedFields.push(key);
+                              } else {
+                                updatedSelectedFields.splice(fieldIndex, 1);
+                              }
+                              setSelectedFields(updatedSelectedFields);
+                            }}
+                          />
+                          {key.replace(/_/g, ' ')}
+                          {selectedFields.includes(key) && (
+                            <AddTaskRoundedIcon
+                              style={{
+                                position: 'absolute',
+                                top: '50%',
+                                right: '15px',
+                                transform: 'translateY(-50%)',
+                                color:'white'
+                              }}
+                            />
+                          )}
+                        </label>
+                      )
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 25px', borderTop: '2px solid #808080', marginTop: '10px' }}>
+                <div>
+                  <button style={{ margin:'10px', color:'white', background:'#3E3E42', borderRadius:'5px', padding:'5px 15px', border:'none', boxShadow:'0px 0px 5px gray'  }} onClick={handleSelectAll}>Select All</button>
+                  <button style={{ margin:'10px', color:'black', background:'#FFFFF', borderRadius:'5px', padding:'5px 15px', border:'none', boxShadow:'0px 0px 5px gray' }} onClick={handleDeselectAll}>Deselect All</button>
+                </div>
+                <div>
+                  <button style={{ margin:'10px', color:'white', background:'#12E5E5', borderRadius:'100px', padding:'5px 15px', border:'none', boxShadow:'0px 0px 5px gray', display:'flex', alignItems:'center' }} onClick={handleApply}>Save  <DownloadDoneRoundedIcon style={{height:'20px', width:'auto', marginLeft:'10px'}} /></button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
-      </div>
       <div className="table-wrapper">
         <table className="table">
           <thead>
             <tr>
-              <th>Actions</th>
-              {showColumns.userName && <th>User Name</th>}
-              {showColumns.phoneNumber && <th>Phone Number</th>}
-              {showColumns.callType && <th>Call Type</th>}
-              {showColumns.callStatus && <th>Call Status</th>}
-              {showColumns.dateTime && <th>Date and Time</th>}
-              {showColumns.duration && <th>Duration</th>}
-              {showColumns.assignedTo && <th>Assigned To</th>}
-              {showColumns.landingNumber && <th>Landing Number</th>}
+              <th className="sticky-column">Actions</th>
+              {Object.entries(showColumns).map(([key, value]) => (
+                value && key !== '_id' && <th key={key} className="sticky-column">{key.replace(/_/g, ' ')}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -765,127 +270,28 @@ const CallsGrid = () => {
               <tr key={startIndex + idx}>
                 <td className="fit">
                   <span className="actions">
-                    <BsFillPencilFill
+                    <MoreVertIcon
                       className="edit-btn"
                       onClick={() => handleEditRow(startIndex + idx)}
                     />
                   </span>
                 </td>
-                {showColumns.userName && <td>{row.userName}</td>}
-                {showColumns.phoneNumber && <td>{row.phoneNumber}</td>}
-                {showColumns.callType && <td>{row.callType}</td>}
-                {showColumns.callStatus && <td>{row.callStatus}</td>}
-                {showColumns.dateTime && <td>{row.dateTime}</td>}
-                {showColumns.duration && <td>{row.duration}</td>}
-                {showColumns.assignedTo && <td>{row.assignedTo}</td>}
-                {showColumns.landingNumber && <td>{row.landingNumber}</td>}
+                {Object.entries(showColumns).map(([key, value]) => (
+                  value && key !== '_id' && (
+                    <td key={key}>
+                      {typeof row[key] === 'object' ? row[key].$numberLong : row[key]}
+                    </td>
+                  )
+                ))}
               </tr>
             ))}
           </tbody>
         </table>
+        <div style={{height:'6rem', background:'white'}}>
       </div>
-      {modalOpen && (
-        <div
-          className="modal-container"
-          onClick={e => {
-            if (e.target.className === "modal-container") setModalOpen(false);
-          }}
-        >
-          <div className="modal">
-            <form>
-              <div className="form-group">
-                <label htmlFor="userName">User Name</label>
-                <input
-                  name="userName"
-                  onChange={handleChange}
-                  value={formState.userName}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="phoneNumber">Phone Number</label>
-                <input
-                  name="phoneNumber"
-                  onChange={handleChange}
-                  value={formState.phoneNumber}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="callType">Call Type</label>
-                <select
-                  name="callType"
-                  onChange={handleChange}
-                  value={formState.callType}
-                >
-                  <option value="">Select Call Type</option>
-                  <option value="Inbound">Inbound</option>
-                  <option value="Outbound">Outbound</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label htmlFor="callStatus">Call Status</label>
-                <input
-                  name="callStatus"
-                  onChange={handleChange}
-                  value={formState.callStatus}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="dateTime">Date and Time</label>
-                <input
-                  type="datetime-local"
-                  name="dateTime"
-                  onChange={handleChange}
-                  value={formState.dateTime}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="duration">Duration</label>
-                <input
-                  name="duration"
-                  onChange={handleChange}
-                  value={formState.duration}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="assignedTo">Assigned To</label>
-                <input
-                  name="assignedTo"
-                  onChange={handleChange}
-                  value={formState.assignedTo}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="landingNumber">Landing Number</label>
-                <input
-                  name="landingNumber"
-                  onChange={handleChange}
-                  value={formState.landingNumber}
-                />
-              </div>
-              {errors && <div className="error">{`Please include: ${errors}`}</div>}
-              <button type="submit" className="btn" onClick={handleSubmit}>
-                Submit
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-       <div>
-        {/* Pagination */}
-        <button onClick={() => setPageNumber(pageNumber - 1)} disabled={pageNumber === 1}>&#60;</button>
-        {pageNumbers.map((num) => (
-          <button
-            key={num}
-            onClick={() => setPageNumber(num)}
-            style={{ fontWeight: num === pageNumber ? "bold" : "normal" }}
-          >
-            {num}
-          </button>
-        ))}
-        <button onClick={() => setPageNumber(pageNumber + 1)} disabled={pageNumber === totalPages}>&#62;</button>
-        <div>Page: {pageNumber}</div>
-        <div>Records: {startIndex + 1} - {Math.min(endIndex, rows.length)} of {rows.length}</div>
       </div>
+      
+     
     </div>
   );
 };

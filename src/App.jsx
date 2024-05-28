@@ -1,25 +1,23 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import Home from './components/pages/home';
-import Calls from './components/pages/calls';
-import Leads from './components/pages/leads';
-import Enquiry from './components/pages/enquiry';
-import Report from './components/pages/report';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Loginpage from './components/pages/login_page';
-function App() {
+import Welcome from './components/pages/welcome';
+import Dashboard from './components/Dashboard/Dashboard';
+import Home from './components/pages/home';
+
+
+const App = () => {
   return (
     <Router>
       <Routes>
-      <Route path="/login" element={<Loginpage/>} />
-      <Route path="/" element={<Home/>} />
-      <Route path="/home" element={<Navigate to="/" />} />
-      <Route path="/calls" element={<Calls/>} />
-      <Route path="/leads" element={<Leads/>} />
-      <Route path="/enquiry" element={<Enquiry/>} />
-      <Route path="/report" element={<Report/>} />
-    </Routes>
+        <Route path='/' element={<Loginpage/>} />
+        <Route path="/Welcome" element={<Welcome />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/Dashboard" element={<Dashboard/>} />
+     
+      </Routes>
     </Router>
   );
-}
-export default App;
+};
 
+export default App;

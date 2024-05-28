@@ -4,6 +4,7 @@ import Link from '@mui/material/Link';
 import { Typography } from '@mui/material';
 import config from '../../config/config';
 
+
 function Footer() {
     const [showFooter, setShowFooter] = useState(false);
     const [companylogoData, setcompanylogoData] = useState([]);
