@@ -14,6 +14,7 @@ import eyeIcon from "../../assets/images/eyeIcon.png";
 import eye from "../../assets/images/eye.png";
 import config from '../../config/config';
 
+
 function Loginpage() {
   const [inputType, setInputType] = useState('password');
   const [eyeButton, setEyeButton] = useState(eyeIcon);
@@ -53,7 +54,7 @@ function Loginpage() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex(prevIndex => (prevIndex + 1) % images.length);
-    }, 5000);
+    }, 2500);
     
     return () => clearInterval(interval);
   }, [images.length]);
@@ -65,16 +66,16 @@ function Loginpage() {
 
   return (
     <div>
+      <img src={Background} alt="background" style={{ height: '100vh', position: 'absolute', zIndex: -1, opacity: '25%', width:'100%' }} />
     {companylogoData.map((item, index) => ( <div style={{ height: '100%', display: 'flex' }}>
-      <div style={{ width: '60%', height: 'fit-content', position: 'relative', width:'60%' }}>
-        <img src={item.login.background.bg} alt="background" style={{ height: '100vh', position: 'absolute', zIndex: -1, opacity: '25%' }} />
+      <div style={{ width: '60%', height: '100vh', position: 'relative' }}>
        
         <div style={{ }}>
-  {images.map((image, index) => (
-    <div key={index} style={{ float: 'left',marginTop:'30px', height: '50%', width: '50%', filter: currentIndex === index ? 'drop-shadow(0px 0px 8px  #000000' : 'none' }}>
-      <img src={image} alt="logo" style={{ height: currentIndex === index ? '350px' : '200px', transition: 'height 1s' }} />
-    </div>
-  ))}
+      {images.map((image, index) => (
+        <div key={index} style={{ float: 'left',marginTop:'30px', height: '50%', width: '50%', filter: currentIndex === index ? 'drop-shadow(0px 0px 8px  #000000' : 'none' }}>
+          <img src={image} alt="logo" style={{ height: currentIndex === index ? '300px' : '200px', transition: 'height 1s' }} />
+        </div>
+      ))}
 </div>
 
 
@@ -82,13 +83,13 @@ function Loginpage() {
 
   
       </div>
-      <div style={{ position: 'relative', right: '10px', width:'30%' }}>
-        <Typography variant="h6" style={{ background: 'linear-gradient(to right, #12e5e5, #00C9FF)', fontSize: '40px', WebkitBackgroundClip: 'text', color: 'transparent', fontWeight: 'bolder', fontsize: '40px' }}>
+      <div style={{ position: 'relative', right: '10px', width:'30%' ,paddingLeft:'50px'}}>
+        <Typography variant="h6" style={{ color:'#fc921b', marginTop:'100px', fontSize: '40px', fontWeight: 'bolder', fontsize: '40px' }}>
         {item.login.login.title}
         </Typography>
         <Typography variant="h6">{item.login.welcome.title}</Typography>
         <Grid>
-          <Grid item xs={12} sm={6} style={{ marginTop: '100px', display: 'flex' }} >
+          <Grid item xs={12} sm={6} style={{ marginTop: '25px', display: 'flex' }} >
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <img src={item.login.company.logo} alt="logo" style={{ width: '25px', height: 'auto' }} />
             </div>
@@ -190,18 +191,23 @@ function Loginpage() {
             </div>
           </Grid>
         </Grid>
+        <div style={{ display:'flex',justifyContent:'center'  , paddingRight:'50px'}}>
       
         <Typography variant="body2" style={{ color: '#00AEF8', marginTop: '30px', textAlign: 'center' }}>{item.login.forget.title}</Typography>
-        {errorMessage && (
+        </div>
+        <div style={{ display:'flex',justifyContent:'center' , paddingRight:'50px'}}>
+              {errorMessage && (
             <Typography variant="body2" style={{ color: 'red', marginTop: '10px', textAlign: 'center' }}>{errorMessage}</Typography>
           )}
-        <div style={{ textAlign: 'center' }}>
+          </div>
+  
+        <div style={{ display:'flex',justifyContent:'center' , paddingRight:'50px'}}>
           {allFieldsFilled ? (
-            <Link to="/home" style={{ textDecoration: 'none' }}>
-              <Button variant="contained" color="primary" style={{ background: '#12e5e5', color: '#FFFFFf', fontWeight: '500', padding: '5px 15px 5px 15px ', marginTop: '10px' }} onClick={handleLogin}>{item.login.button.title}</Button>
+            <Link to="/welcome" style={{ textDecoration: 'none' }}>
+              <Button variant="contained" color="primary" style={{ background: '#2C66DD', color: '#FFFFFf', fontWeight: '500', padding: '5px 15px 5px 15px ', marginTop: '10px' }} onClick={handleLogin}>{item.login.button.title}</Button>
             </Link>
           ) : (
-            <Button variant="contained" color="primary" style={{ background: '#12e5e5', color: '#FFFFFf', fontWeight: '500', padding: '5px 15px 5px 15px ', marginTop: '10px' }} onClick={handleLogin}> {item.login.button.title}</Button>
+            <Button variant="contained" color="primary" style={{ background: '#212529', color: '#FFFFFf', fontWeight: '500', padding: '5px 15px 5px 15px ', marginTop: '10px' }} onClick={handleLogin}> {item.login.button.title}</Button>
           )}
         
         </div>

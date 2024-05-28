@@ -27,7 +27,7 @@ const Search = () => {
   };
 
   return (
-    <Container>
+    <Container style={{padding:'10px'}}>
       <Grid container spacing={2}>
         {menuData.map((menuItem, index) => (
           <Grid item key={index}>

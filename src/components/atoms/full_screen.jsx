@@ -79,13 +79,15 @@ const FullScreen = () => {
   return (
     <div className='header_button'>
       {logoData.map((item, index) => (
-        <div key={index} className="fullscreen">
+        <div key={index} className="fullscreen" >
           <Button
             id="exitFullscreenButton"
             className="header_buttons"
             onClick={toggleFullScreen}
+           
+           
           >
-            <img className="full_screen_img" alt="" src={item.menu.header.full_screen.full_screen_icon} />
+            <img className="full_screen_img" alt="" src={item.menu.header.full_screen.full_screen_icon}  style={{ height: 20, padding:'30px 15px' }} />
           </Button>
         </div>
       ))}

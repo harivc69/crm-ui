@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../organism/header';
 import SideMenu from "../organism/sidemenu";
+import CallsGrid from '../molecules/call_app_bar';
+import SidebarName from '../atoms/sidebar-name';
+import { Typography } from '@mui/material';
+
 
 
 function Leads() {
@@ -10,21 +14,30 @@ function Leads() {
   });
 
   useEffect(() => {
-    document.title = 'Home';
+    document.title = 'Calls';
 
     return () => {
       document.title = 'Default Title';
     };
   }, []);
 
+
+
   return (
     <div style={{ height: '100vh', display: "flex", flexDirection: "column", overflow: 'hidden', backgroundColor:"gray" }}>
-      <Header />
+     
       <div style={{ display: 'flex', height: '-webkit-fill-available', overflow: 'hidden' }}>
-        <div style={{ width: '85px', overflow: 'hidden', backgroundColor:"white" }}>
-          <SideMenu />
+      <div style={{ width: '10vh', overflow: 'hidden', backgroundColor: "#0d2d4e" }}>
+          <SideMenu backgroundColor={backgroundColor} />
         </div>
-        <div style={{ width: '100%', marginRight:"-10px", backgroundColor: backgroundColor, overflow: 'hidden' }}>
+        <div style={{ width: '100%', marginRight: "-10px", backgroundColor: backgroundColor, overflow: 'hidden' }}>
+          <div>
+            <Header backgroundColor={backgroundColor} />
+          </div>
+          <Typography style={{ height:'10rem', color:'white', padding:'10px', fontSize:'30px',backgroundColor:{backgroundColor}  }}>
+          leads
+        </Typography>
+       <CallsGrid />
           
         </div>
       </div>

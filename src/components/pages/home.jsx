@@ -2,16 +2,17 @@ import React, { useEffect, useState } from 'react';
 import Header from '../organism/header';
 import MenuComponent from "../organism/menu";
 import SideMenu from "../organism/sidemenu";
-import CreateWidget from '../atoms/create_widgets';
 import Submenu from '../organism/submenu';
 import BackgroundColorChanger from '../atoms/BackgroundColorChanger';
 import Footer from '../atoms/Footer';
+import CreateWidget from '../atoms/create_widgets';
 
 function Home() {
   const [backgroundColor, setBackgroundColor] = useState(() => {
-    // Check if there's a color stored in local storage, otherwise use default
     return localStorage.getItem('backgroundColor') || '#d9d9d9';
   });
+
+  const [selectedWidgets, setSelectedWidgets] = useState([]);
 
   useEffect(() => {
     document.title = 'Home';
@@ -21,19 +22,22 @@ function Home() {
     };
   }, []);
 
-  // Function to handle color change
+
+
+  const handleSaveSelectedText = (texts) => {
+    setSelectedWidgets(texts);
+  };
+
   const handleColorChange = (color) => {
     setBackgroundColor(color);
-    // Store the color in local storage
     localStorage.setItem('backgroundColor', color);
   };
 
-  // Generate fifty linear gradient colors with light shades
   const randomGradientColors = [];
   function generateRandomLightColor() {
-    const r = Math.floor(Math.random() * 28) + 128; // Red channel between 128 and 255
-    const g = Math.floor(Math.random() * 128) + 128; // Green channel between 128 and 255
-    const b = Math.floor(Math.random() * 128) + 128; // Blue channel between 128 and 255
+    const r = Math.floor(Math.random() * 128) + 128;
+    const g = Math.floor(Math.random() * 128) + 128;
+    const b = Math.floor(Math.random() * 128) + 128;
     return '#' + r.toString(16).padStart(2, '0') + g.toString(16).padStart(2, '0') + b.toString(16).padStart(2, '0');
   }
   for (let i = 0; i < 30; i++) {
@@ -42,30 +46,31 @@ function Home() {
     const linearGradient = `linear-gradient(145deg, ${color1}, ${color2})`;
     randomGradientColors.push(linearGradient);
   }
-  
+
   return (
-    <div style={{ height: '100vh', display: "flex", flexDirection: "column", overflow: 'hidden', backgroundColor:"gray" }}>
-      <Header  backgroundColor={backgroundColor} />
+    <div style={{ height: '100vh', display: "flex", flexDirection: "column", overflow: 'hidden', backgroundColor: "gray" ,paddingLeft:0 }}>
+      
       <div style={{ display: 'flex', height: '-webkit-fill-available', overflow: 'hidden' }}>
-        <div style={{ width: '15vh', overflow: 'hidden', backgroundColor:"white" }}>
+        <div style={{ width: '10vh', overflow: 'hidden', backgroundColor: "#0d2d4e" }}>
           <SideMenu backgroundColor={backgroundColor} />
         </div>
-        <div style={{ width: '100%', marginRight:"-10px", backgroundColor: backgroundColor, overflow: 'hidden' }}>
-          <div>
-            <MenuComponent backgroundColor={backgroundColor} />
-          </div>
-         
-         <div>
+          <div style={{ width: '100%', marginRight: "-10px", backgroundColor: backgroundColor, overflow: 'hidden' }}>
+            <div>
+              <Header backgroundColor={backgroundColor} />
+            <BackgroundColorChanger colors={randomGradientColors} onColorChange={handleColorChange} />
 
-      <Submenu backgroundColor={backgroundColor} />
-         </div>
-          <div>
-            <CreateWidget backgroundColor={backgroundColor} />
+            </div>
+            <div>
+              <MenuComponent  onSaveSelectedText={handleSaveSelectedText} backgroundColor={backgroundColor} />
+            </div>
+            <div>
+              <Submenu backgroundColor={backgroundColor} />
+            </div>
+            <div>
+              <CreateWidget backgroundColor={backgroundColor} />  
+            </div>
+            
           </div>
-     
-          <BackgroundColorChanger colors={randomGradientColors} onColorChange={handleColorChange} />
-        </div>
-        
       </div>
       <Footer />
     </div>
