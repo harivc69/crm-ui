@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import config from "../../config/config";
@@ -8,6 +8,11 @@ import "../../assets/styles/callsgrid.css";
 import GridMenu from "../molecules/gridmenu";
 import Papa from 'papaparse';
 import CsvImporter from "../molecules/csvImpoter";
+import OutlinedInput from '@mui/material/OutlinedInput';
+import Chip from '@mui/material/Chip';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditNoteOutlinedIcon from '@mui/icons-material/EditNoteOutlined';
+import dayjs from "dayjs";
 
 
 
@@ -30,6 +35,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions 
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined';
 import Loader from "../molecules/loader";
 import Pagination from "@mui/material/Pagination";
 import { useNotifications } from '../atoms/notification'; // Import the hook
@@ -42,6 +48,7 @@ const gridEndpoint = "appdata/retrieve";
 
 
 const GridComponent = ({ pageName }) => {
+  const [open, setOpen] = useState(false);
   const [columns, setColumns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -64,19 +71,39 @@ const GridComponent = ({ pageName }) => {
   const { fetchNotifications } = useNotifications();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [inputPage, setInputPage] = useState("");
+  const [dynamicFields, setDynamicFields] = useState([]);
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null });
+  const [sortModel, setSortModel] = useState([]);
+  const [SelectedColumns, setSelectedColumns] = useState([]);
 
-
+    const fetchDataWithRetry = useCallback(
+      async (url, retryCount = 3) => {
+        try {
+          const response = await axios.get(url, { headers });
+          return response.data;
+        } catch (error) {
+          if (retryCount > 0) {
+            console.warn("Retrying request, attempts left:", retryCount);
+            return fetchDataWithRetry(url, retryCount - 1);
+          } else {
+            throw error;
+          }
+        }
+      },
+      []
+    );
+ 
   // const [filteredRows, setFilteredRows] = useState(gridData);
   //not confirmed
   const [menuData, setMenuData] = useState([]);
   useEffect(() => {
     axios.get(`${config.apiUrl}/menus`, {headers}) // Use apiUrl from the configuration file
       .then((response) => {
-        // console.log('dayData received:', response.data.data.menu_text);
+        // 
         const containerData = response.data.data.find(menu => menu.menu === 'container');
 
         setMenuData(containerData);
-        console.log("menusss", response.data.data)
+        
         
       })
       .catch((error) => {
@@ -122,7 +149,7 @@ const GridComponent = ({ pageName }) => {
       console.error("Token not found");
     }
   }, []);
-  console.log("userdata", userData);
+  
 
     // Open the Import Data Modal
     const handleOpenImportModal = () => {
@@ -157,11 +184,17 @@ const GridComponent = ({ pageName }) => {
   };
 
   const handleApplyColumns = () => {
-    setColumns(tempVisibleColumns);
-    closeColumnModal();
-  };
+  setColumns(tempVisibleColumns);
+
+  const columnsData = JSON.stringify(tempVisibleColumns);
+  sessionStorage.setItem(`visibleColumns_${pageName}`, columnsData);
+  localStorage.setItem(`visibleColumns_${pageName}`, columnsData);
+
+  closeColumnModal();
+};
+
   const handleDeleteClick = (row) => {
-    console.log("row", row);
+    
     handleMenuClose();
     setRowToDelete(row); // Set the row to be deleted
     setDeleteDialogOpen(true); // Open the confirmation dialog
@@ -209,6 +242,7 @@ const GridComponent = ({ pageName }) => {
 
   useEffect(() => {
     if (pageName) {
+      setSelectedColumns([]); // Reset selected columns
       setIsLoading(true); // Set the loader to true when pageName changes
       setPage(1); // Reset to the first page when the pageName changes
       setInputPage(1); // Reset the input page number when the pageName changes
@@ -216,69 +250,126 @@ const GridComponent = ({ pageName }) => {
   }, [pageName]);
   
   
-
+const [existingControl, setExistingControl] = useState([]);
   // Fetch select options
-  useEffect(() => {
-    const fetchSelectOptions = async () => {
-      try {
-
-        const response = await axios.post(
-          
-          `${config.apiUrl.replace(/\/$/, "")}/${endpoint}`,
-          {
-            pageName: pageName,
-            control_type: "dropdown",
-          },
-          {
-            // This is the config object where headers should go
-            headers: headers, // Pass the headers here
-          }
-        );
-        const options = response.data.data[0].value.map((option) => ({
-          name: option.name,
-          filter: option.filter,
-        }));
-        setSelectOptions(options); // Assuming the API returns an object with an 'options' array
-        console.log("widget", widget);
-      setKey(prevKey => prevKey + 1);
-        if (options.length > 0) {
-          if (widget) {
-            const selectedOption = options.find(
-              (option) => option.name === widget
-            );
-            if (selectedOption) {
-              setSelectedValue(JSON.stringify(selectedOption.filter));
-            } else {
-              setSelectedValue(JSON.stringify(options[0].filter)); // Fallback to the first option if no match is found
-            }
-            setWidget(""); // Clear the widget value after initial use
-          } else {
-            setSelectedValue(JSON.stringify(options[0].filter)); // Set default value to the first option
-          }
-        }
-        // if (options.length > 0) {
-        //   setSelectedValue(JSON.stringify(options[0].filter)); // Set default value to the first option
-        // }
-      } catch (error) {
-        console.error("Error fetching select options:", error);
+  // Define the function outside of useEffect
+const fetchSelectOptions = async () => {
+  try {
+    const response = await axios.post(
+      `${config.apiUrl.replace(/\/$/, "")}/${endpoint}`,
+      {
+        pageName: pageName,
+        control_type: "dropdown",
+      },
+      {
+        headers: headers, // Pass the headers here
       }
-    };
-    fetchSelectOptions();
-  }, [pageName]);
+    );
 
+    setExistingControl(response.data.data.find((control) => control.pageName === pageName));
+
+    const options = response.data.data[0].value.map((option) => ({
+      name: option.name,
+      filter: option.filter,
+      fields: option.fields,
+    }));
+
+    setSelectOptions(options); // Assuming the API returns an object with an 'options' array
+
+    setKey((prevKey) => prevKey + 1);
+
+    if (options.length > 0) {
+      if (widget) {
+        const selectedOption = options.find(
+          (option) => option.name === widget
+        );
+        if (selectedOption) {
+          setSelectedValue(JSON.stringify(selectedOption.filter));
+          setSelectedColumns(JSON.stringify(selectedOption.fields));
+        } else {
+          setSelectedValue(JSON.stringify(options[0].filter)); // Fallback to the first option if no match is found
+          setSelectedColumns(JSON.stringify(options[0].fields));
+        }
+        setWidget(""); // Clear the widget value after initial use
+      } else {
+        setSelectedValue(JSON.stringify(options[0].filter)); // Set default value to the first option
+        setSelectedColumns(JSON.stringify(options[0].fields));
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching select options:", error);
+  }
+};
+
+// Call fetchSelectOptions inside useEffect
+useEffect(() => {
+  fetchSelectOptions();
+}, [pageName]);
+
+  const handleDeleteOption = async (index, option) => {
+    
+    // Show confirmation dialog before deleting
+    const isConfirmed = window.confirm(`Are you sure you want to delete "${option.name}"?`);
+    
+    if (!isConfirmed) {
+        return; // Exit if user cancels
+    }
+
+    
+    
+
+    try {
+        // Remove the selected option from existingControl.value
+        const updatedOptions = existingControl.value.filter((_, i) => i !== index);
+        
+
+        // Create an object excluding `_id`
+        const { _id, ...updatedControl } = existingControl; // Exclude `_id`
+        updatedControl.value = updatedOptions; // Update value array
+
+        // Send a PUT request to update the backend
+        await axios.put(`${config.apiUrl}/controls/${_id}`, updatedControl, { headers });
+
+        // Update state with new options
+        setSelectOptions(updatedOptions);
+
+        // Update selected value if needed
+        if (updatedOptions.length > 0) {
+            setSelectedValue(JSON.stringify(updatedOptions[0].filter));
+        } else {
+            setSelectedValue(""); // Clear selection if empty
+        }
+
+    } catch (error) {
+        console.error("Error deleting option:", error);
+    }
+};
+
+const handleEditOption = (index, option) => {
+  console.log("Edit option:", option);
+  navigate(`/${pageName}/customdropdown`, { state: { filters: option, pageName: pageName } });
+};
+
+  
+  
+  
   // Handle page change
   const [key, setKey] = useState(0);
   const handlePageChange = (event, value) => {
-    // setKey(prevKey => prevKey + 1);
     const currentPage = value;
     const currentpageSize = pageSize;
     setLoading(true);
     
-    handleChange({ target: { value: selectedValue } }, currentPage, currentpageSize);
+    // Use the existing filterText state and sortModel to fetch data for the selected filter
+    const filter = JSON.parse(selectedValue);
+    const sortField = sortModel[0]?.field || null;
+    const sortOrder = sortModel[0]?.sort || null;
+
+    fetchGridData(filter, currentPage, currentpageSize, sortField, sortOrder);
+    
     setPage(value);
     setInputPage(value);
-    console.log("current page", value);
-    // fetchGridData();
+    
   };
 
   // Fetch grid data based on the selected filter
@@ -287,31 +378,44 @@ const GridComponent = ({ pageName }) => {
       handleChange({ target: { value: selectedValue } });
     }
   }, [selectedValue]);
+
+  const handleCustomDropDown =() => {
+    navigate(`/${pageName}/customdropdown`, { state: { pageName: pageName } });
+  }
   
   useEffect(() => {
     if (pageName) {
       setIsLoading(true); // Show loading spinner when pageName changes
   
       // Clear filterText and reset pagination to initial state
+      setSelectedColumns([]); // Reset selected columns
       setFilterText({}); // Reset all filter fields
       setPage(1);        // Reset current page number
       setInputPage(1);   // Reset input page number
     }
   }, [pageName]);
   
-  // Existing handleFilterChangeAndSearch remains unchanged
-  
-  
+  const handleFieldOption = (index, option) => {
+    setSelectedColumns(option.fields);
+  };
+
   //Drop Down Change
   const handleChange = (event, currentPage, currentpageSize) => {
-    const filter = JSON.parse(event.target.value);
-    setSelectedValue(event.target.value);
-
+    const selectedValue = event.target.value;
+    setSelectedValue(selectedValue);
+    if (selectedValue === "custom") {
+      handleCustomDropDown(); // Call your custom dropdown function
+      return; // Exit early to avoid fetching grid data
+    }
+    
+    const filter = JSON.parse(selectedValue);
+  
     const currentPageNumber = currentPage || 1;
     const currentNumberofRow = currentpageSize || 25;
     setLoading(true);
     fetchGridData(filter, currentPageNumber, currentNumberofRow); // Fetch grid data for the selected option
   };
+  
   
   const flattenObject = (obj, parent = '', res = {}) => {
     for (let key in obj) {
@@ -324,21 +428,32 @@ const GridComponent = ({ pageName }) => {
     return res;
   };
   
-  const fetchGridData = async (filter, currentPageNumber, currentNumberofRow) => {
+  const fetchGridData = async (filter, currentPageNumber, currentNumberofRow, sortField = null, sortOrder = null) => {
     try {
-      console.log("filter", filter);  
-      console.log("current PAges", currentPageNumber);
-      console.log("current PAges Size", currentNumberofRow);
-      const response = await axios.post(
-        `${config.apiUrl.replace(/\/$/, "")}/${gridEndpoint}?page=${currentPageNumber}&pageSize=${currentNumberofRow}`, 
-        filter, // This is the body (data you are sending)
         
+      
+      
+      const queryParams = new URLSearchParams({
+        page: currentPageNumber,
+        pageSize: currentNumberofRow,
+      });
+ 
+      if (sortField && sortOrder) {
+        queryParams.append("sortField", sortField);
+        queryParams.append("sortOrder", sortOrder);
+      }
+ 
+      // Make the API request
+      const response = await axios.post(
+        `${config.apiUrl.replace(/\/$/, "")}/${gridEndpoint}?${queryParams.toString()}`,
+        filter, // Send filter in the request body
         {
-          headers: headers, // This is the config object where headers go
+          headers: headers, // Include headers for authorization
         }
       );
       
       
+
       const dataWithIds = response.data.data.map((item, index) => {
         const flattenedItem = flattenObject(item); // Flatten the object
         return {
@@ -346,38 +461,113 @@ const GridComponent = ({ pageName }) => {
           id: item._id || index,
         };
       });
+      
+
       setTotalRecord(response.data.pagination.totalCount);
-  
-      setGridData(dataWithIds);
+      setGridData(dataWithIds); // Ensure gridData is set with the fetched data
       setTotalRows(dataWithIds.length);
-  
+
+      const responses = await axios.post(
+        `${config.apiUrl.replace(/\/$/, "")}/${endpoint}`,
+        {
+          pageName: pageName,
+          control_type: "dropdown",
+        },
+        {
+          headers: headers, // Pass the headers here
+        }
+      );
+      const initialdropDowncolumn = responses.data.data[0].value[0].fields;
+
+          const apiUrl = `${config.apiUrl.replace(/\/$/, "")}/webforms`;
+          const fieldresponse = await fetchDataWithRetry(apiUrl);
+          const fetchedWebformsData = fieldresponse.data || [];
+          const currentPage = fetchedWebformsData.find(
+            (page) => page.pageName === pageName
+          );
+          const currentPageFields = currentPage.fields || [];
+          setDynamicFields(currentPageFields);
+
       if (response.data.data.length > 0) {
-        const dynamicColumns = Object.keys(dataWithIds[0])
-          .filter((key) => key !== "pageId" && key !== "pageName" &&  key !== "_id" && key !== "appdata" && key !== "history" 
-          && key !== "id" && key !== "comments" && key !== "pageID" && key !== "filter" && key !== "formatted_filter" && key !== "selected_columns" 
-          && key !== "profile_img" && key !== "roles") 
-          .map((key) => {
+        const excludedKeys = [
+          "pageId", "pageName", "_id", "appdata", "history", "id", "comments",
+          "pageID", "filter", "formatted_filter", "selected_columns",
+          "profile_img", "roles", "property_type", "project_name","fb_form_name", "fb_page_name", "fb_form_id", "landing_number", "acp", "alternative_email", "sm", "description"
+        ];
+        const dynamicfields = SelectedColumns.length > 0 ? SelectedColumns : initialdropDowncolumn;
+        const fieldsToUse = dynamicfields.length > 0 ? dynamicfields.map(field => ({ fieldName: field, label: field })) : currentPageFields;
+ 
+        const dynamicColumns = fieldsToUse
+        .filter(field => field.fieldName && !excludedKeys.includes(field.fieldName))
+          .map((field) => {
+            const key = field.fieldName;
+            const label = field.label || key.replace(/_/g, " ").replace(/\b\w/g, char => char.toUpperCase());
             if (key === "created_time") {
               return {
                 field: key,
                 headerName: "Created Time",
                 width: 200,
                 renderCell: (params) => {
-                  const utcDate = new Date(params.value); // Convert to Date object (UTC time)
-      
-                  // Get the offset in minutes for local time relative to UTC
-                  const timezoneOffset = utcDate.getTimezoneOffset(); 
-      
-                  // Adjust the UTC time based on the offset (getTimezoneOffset is in minutes, so multiply by 60000 to get milliseconds)
-                  const localTime = new Date(utcDate.getTime() - timezoneOffset * 60000); 
-      
-                  // Format the local time
-                  const formattedLocalTime = localTime.toLocaleString();
-      
+                  const utcDate = new Date(params.value);
+            
+                  const timezoneOffset = utcDate.getTimezoneOffset();
+                  const localTime = new Date(utcDate.getTime() - timezoneOffset * 60000);
+            
+                  // Extract components
+                  const year = localTime.getFullYear();
+                  const month = String(localTime.getMonth() + 1).padStart(2, '0');
+                  const day = String(localTime.getDate()).padStart(2, '0');
+            
+                  const time = localTime.toLocaleTimeString(undefined, {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true,
+                  });
+            
+                  const formattedLocalTime = `${year}/${month}/${day}, ${time}`;
+            
                   return formattedLocalTime;
                 }
               };
             }
+            
+            if (key === "follow_up_on" || key === "site_visit_on" || key === "Modified_at") {
+              return {
+                field: key,
+                headerName: key
+                  .replace(/_/g, " ")
+                  .replace(/\b\w/g, (char) => char.toUpperCase()),
+                width: 200,
+                renderCell: (params) => {
+                  if (!params.value) return ""; // Return empty string if no data
+            
+                  const utcDate = new Date(params.value); // Convert to Date object (UTC time)
+            
+                  // Get the offset in minutes for local time relative to UTC
+                  const timezoneOffset = utcDate.getTimezoneOffset();
+            
+                  // Adjust the UTC time based on the offset
+                  const localTime = new Date(utcDate.getTime() - timezoneOffset * 60000);
+            
+                  // Format the date manually to "YYYY/MM/DD, hh:mm:ss AM/PM"
+                  const year = localTime.getFullYear();
+                  const month = String(localTime.getMonth() + 1).padStart(2, '0');
+                  const day = String(localTime.getDate()).padStart(2, '0');
+            
+                  const time = localTime.toLocaleTimeString(undefined, {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true,
+                  });
+            
+                  return `${year}/${month}/${day}, ${time}`;
+                }
+              };
+            }
+            
+            
             return {
               field: key,
               headerName: key
@@ -392,8 +582,6 @@ const GridComponent = ({ pageName }) => {
         setColumns(dynamicColumns);
         setAvailableColumns(dynamicColumns); // Set available columns here
       } else {
-        // setIsLoading(true);
-        // setLoading(true);
         setTimeout(() => {
           setIsLoading(false);
           setLoading(false);
@@ -405,6 +593,24 @@ const GridComponent = ({ pageName }) => {
     }
   };
   ;
+
+  const handleSortModelChange = (newSortModel) => {
+      
+    setSortModel(newSortModel); // Update the sort model state
+ 
+    if (newSortModel.length > 0) {
+      const { field, sort } = newSortModel[0]; // Extract field and sort order
+      const currentPage = 1; // Reset to the first page when sorting changes
+      setLoading(true);
+      fetchGridData(JSON.parse(selectedValue), currentPage, pageSize, field, sort);
+      setPage(currentPage); // Reset the page state
+    } else {
+      // If no sorting is applied, fetch data without sort parameters
+      setLoading(true);
+      fetchGridData(JSON.parse(selectedValue), 1, pageSize);
+      setPage(1);
+    }
+  };
 
   const handleFilterChange = (field, value) => {
     setPage(1);
@@ -429,7 +635,6 @@ const handleSearch = (field, value) => {
     },
   ];
   
-
   const currentNumberOfRow = pageSize || 25;
   // Reset page number and fetch the grid data
   setPage(1);
@@ -437,54 +642,117 @@ const handleSearch = (field, value) => {
   fetchGridData(filter, 1, currentNumberOfRow);
 };
 
-const handleFilterChangeAndSearch = (field, value, triggerSearch = false) => {
-  // Always update the `filterText` state
-  setFilterText((prev) => ({ ...prev, [field]: value }));
+const handleFilterChangeAndSearch = (field, value, isDropdown) => {
+  let filterValue = value;
 
-  // Only fetch data when `triggerSearch` is true
-  if (triggerSearch) {
-    // Build the dynamic `$match` object
-    const updatedFilters = { ...filterText, [field]: value };
-    const activeFilters = Object.entries(updatedFilters)
-      .filter(([_, v]) => v.trim() !== "") // Exclude empty filters
-      .reduce((acc, [key, val]) => {
-        acc[key] = {
-          $regex: val.trim(), // Partial matching
-          $options: "i",      // Case-insensitive
-        };
-        return acc;
-      }, {});
+  if (isDropdown) {
+    filterValue = Array.isArray(value) ? value : [value];
 
-    const filter = [
-      {
-        $match: {
-          pageName: pageName,
-          ...activeFilters, // Include all active filters dynamically
-        },
-      },
-    ];
+    if (filterValue.length === 0) {
+      setFilterText({});
+      return;
+    }
+  } else if (typeof value === "object") {
+    // If value is an object (startDate & endDate), store it as is
+    filterValue = value;
+  } else {
+    filterValue = typeof value === "string" ? value.trim() : "";
+  }
 
-    const currentNumberOfRow = pageSize || 25;
-    // Reset page number and fetch the grid data
-    setPage(1);
-    setInputPage(1);
-    fetchGridData(filter, 1, currentNumberOfRow);
+  setFilterText((prev) => ({
+    ...prev,
+    [field]: filterValue,
+  }));
+};
+
+const handleDateChange = (field, type) => (e) => {
+  const value = e.target.value;
+  setDateRange((prev) => ({
+    ...prev,
+    [type]: value ? dayjs(value).format("YYYY-MM-DD") : null,
+  }));
+};
+
+const handleDateSearch = (field) => {
+  if (dateRange.startDate || dateRange.endDate) {
+    handleFilterChangeAndSearch(field, {
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+    }, false);
   }
 };
 
+// 🆕 useEffect to trigger search when filterText changes
+useEffect(() => {
+  performSearch();
+}, [filterText]); // Run performSearch when filterText updates
 
+const performSearch = () => {
+  const activeFilters = Object.entries(filterText)
+    .filter(([key, val]) => (Array.isArray(val) ? val.length > 0 : String(val).trim() !== "")) // Exclude empty filters
+    .reduce((acc, [key, val]) => {
+      if (key === "created_time" || key === "follow_up_on" || key === "site_visit_on" || key === "Modified_at") {
+        if (val.startDate && val.endDate) {
+          // If both startDate and endDate are provided, use them as a range
+          const startOfDay = `${dayjs(val.startDate).format("YYYY-MM-DD")}T00:00:00.000Z`;
+          const endOfDay = `${dayjs(val.endDate).format("YYYY-MM-DD")}T23:59:59.999Z`;
 
+          acc[key] = {
+            $gte: startOfDay,
+            $lt: endOfDay,
+          };
+        } else if (val.startDate) {
+          // If only startDate is provided, use it for the entire day
+          const startOfDay = `${dayjs(val.startDate).format("YYYY-MM-DD")}T00:00:00.000Z`;
+          const endOfDay = `${dayjs(val.startDate).format("YYYY-MM-DD")}T23:59:59.999Z`;
 
+          acc[key] = {
+            $gte: startOfDay,
+            $lt: endOfDay,
+          };
+        } else if (val.endDate) {
+          // If only endDate is provided, use it for the entire day
+          const startOfDay = `${dayjs(val.endDate).format("YYYY-MM-DD")}T00:00:00.000Z`;
+          const endOfDay = `${dayjs(val.endDate).format("YYYY-MM-DD")}T23:59:59.999Z`;
 
+          acc[key] = {
+            $gte: startOfDay,
+            $lt: endOfDay,
+          };
+        }
+      } else if (Array.isArray(val)) {
+        acc[key] = { $in: val }; // Handle multi-select filters
+      } else {
+        acc[key] = {
+          $regex: String(val).trim(), // Partial text search
+          $options: "i",      // Case-insensitive
+        };
+      }
+      return acc;
+    }, {});
 
-  const filteredRows = gridData.filter((row) =>
-    columns.every((column) => {
-      const value = row[column.field];
-      const filterValue = filterText[column.field] || "";
-      return String(value).toLowerCase().includes(filterValue.toLowerCase());
-    })
-  );
+  const filter = [
+    {
+      $match: {
+        pageName: pageName,
+        ...activeFilters, // Include all active filters dynamically
+      },
+    },
+  ];
+  setSelectedValue(JSON.stringify(filter)); // Update the selected value for the dropdown
+  const currentNumberOfRow = pageSize || 25;
+  setPage(1);
+  setInputPage(1);
+  fetchGridData(filter, 1, currentNumberOfRow);
+};
 
+const filteredRows = gridData.map((row) => {
+  const flattenedRow = flattenObject(row);
+  return {
+    ...flattenedRow,
+    id: row._id,
+  };
+});
 
   const handleMenuOpen = (event, row) => {
     event.preventDefault();
@@ -503,7 +771,7 @@ const handleFilterChangeAndSearch = (field, value, triggerSearch = false) => {
         navigate(`/${pageName}/${mode}/${selectedRow._id}`, {
             state: { rowData: selectedRow, pageName, mode },
         });
-        console.log("rowdata",selectedRow)
+        
         handleMenuClose();
     }
   };
@@ -513,7 +781,7 @@ const handleFilterChangeAndSearch = (field, value, triggerSearch = false) => {
       navigate(`/${pageName}/${mode}/${ params.row._id}`, {
           state: { rowData:  params.row, pageName, mode },
       });
-      console.log("rowdata", params.row)
+      
       handleMenuClose();
   }
 };
@@ -523,15 +791,12 @@ const handleFilterChangeAndSearch = (field, value, triggerSearch = false) => {
     });
 };
   const handleAsignedTo = () => {
-    navigate("/assignedto");
+    navigate("/users/assignedto");
 
   };
 
 const [filteredData, setFilteredData] = useState([]);
 const [convertDialogOpen, setConvertDialogOpen] = useState(false);
-
-
-
 const openConfirmationDialog = () => {
   setConvertDialogOpen(true);
 };
@@ -542,11 +807,6 @@ const handleConfirmconcertToLead = async () => {
   if (selectedRow) {
     const id = selectedRow._id; // Get the unique ID for the row
     const updatedRow = { pageName: "leads" }; // Only updating the pageName field
-
-    // Log for debugging purposes
-    console.log('ID:', id);
-    console.log('Updated Data being sent:', updatedRow);
-
     try {
       // Send the PUT request with only the pageName field
       await axios.put(`${config.apiUrl}/appdata/${id}`, updatedRow);
@@ -577,7 +837,7 @@ const handleEditReport = async () => {
     );
   
     const selectedReportData = reportResponse.data.data;
-    console.log('Fetched report data:', selectedReportData);
+    
 
     // Navigate to the edit report page and pass the selectedReportData
     navigate(`/edit-report/${reportId}`, { 
@@ -586,6 +846,10 @@ const handleEditReport = async () => {
   } catch (error) {
     console.error('Error fetching report data:', error);
   }
+};
+const openColumnModal = () => {
+  setTempVisibleColumns(columns);
+  setShowColumnModal(true);
 };
 
 const handleViewReport = async () => {
@@ -599,11 +863,11 @@ const handleViewReport = async () => {
     );
     
     const reportData = reportResponse.data.data;
-    console.log('Fetched report data:', reportData);
+    
 
     const pipeline = reportData.formatted_filter;
 
-    console.log('Pipeline array:', pipeline);
+    
 
     // Ensure the pipeline is sent directly as an array
     const appDataResponse = await axios.post(
@@ -613,7 +877,7 @@ const handleViewReport = async () => {
     );
     
     const filteredData_reportId = appDataResponse.data.data; // Store the fetched data
-    console.log('Fetched app data:', filteredData_reportId);
+    
 
     // Update the state with the fetched data
     setFilteredData(filteredData_reportId);
@@ -637,7 +901,6 @@ const handleViewReport = async () => {
       cellClassName: 'center-align',
       headerName: (
         <div style={{display:'flex', flexDirection:'column', margin:'auto', padding:'0 10px'}}>
-        {/* <lable>Select All</lable> */}
         <Checkbox
           style={{color:'white', padding:'0'}}
           className= "select-all-check-box"
@@ -661,7 +924,17 @@ const handleViewReport = async () => {
     },
     {
       field: "actions",
-      headerName: "",
+      headerName: (
+        <div style={{ display: "flex", flexDirection: "column", margin: "auto", padding: "0 10px" }}>
+          <IconButton
+            style={{ padding: "0", color: "white" }}
+            onClick={openColumnModal}
+          >
+            <WidgetsOutlinedIcon />
+            
+          </IconButton>
+        </div>
+      ),
       sortable: false,
       disableColumnMenu: true,
       width: 20,
@@ -696,8 +969,6 @@ const handleViewReport = async () => {
         onViewReport={handleViewReport}
         onEditReport={handleEditReport}
         convertToLead={openConfirmationDialog}
-        // convertToLead={handleConfirmconcertToLead}
-
       />
         </div>
       ),
@@ -705,76 +976,143 @@ const handleViewReport = async () => {
     },
     ...columns.map((column) => ({
       ...column,
+      // sortable: false,
+      disableColumnMenu: true,
       cellClassName: 'center-align',
-      renderHeader: (params) => (
+      renderHeader: (params) => {
+        // Get the field type from dynamicFields
+        const fieldType = dynamicFields.find((field) => field.fieldName === params.field)?.type || "text";
+        // 
         
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            padding: "0",
-            // height: "40px",
-            width: "100%",
-            boxSizing: "border-box",
-            // color: "white",
-            // background: "#212529",
-          }}
-        >
+        return (
           <div
             style={{
-              marginBottom: "5px",
-              fontWeight: "bold",
-              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              padding: "0", 
               width: "100%",
-              fontSize: "10px",
+              boxSizing: "border-box",
             }}
           >
-            {params.colDef.headerName}
-          </div>
-          {/* <TextField
+            <div
+              style={{
+                marginBottom: "5px",
+                fontWeight: "bold",
+                textAlign: "center",
+                width: "100%",
+                fontSize: "10px",
+              }}
+            >
+              {params.colDef.headerName}
+            </div>
+  
+            {/* Render search input based on field type */}
+            {fieldType === "dropdown" ? (
+              <Select
+                multiple
+                value={filterText[params.field] || []} // Always expects an array
+                onChange={(e) => handleFilterChangeAndSearch(params.field, e.target.value, true)}
+                displayEmpty
+                variant="outlined"
+                size="small"
+                style={{ width: "100%", background: "#ffffff", borderRadius: "10px", height: '20px' }}
+                renderValue={(selected) => (selected && selected.length > 0 ? selected.join(", ") : "Select")}
+              >
+                <MenuItem disabled value="">
+                  Select
+                </MenuItem>
+                {(dynamicFields.find((field) => field.fieldName === params.field)?.options || []).map((option) => (
+                  <MenuItem key={option} value={option}>
+                    <Checkbox checked={filterText[params.field]?.includes(option) || false} />
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            ) : fieldType === "date" ? (
+              <TextField
+                type="date"
+                variant="outlined"
+                size="small"
+                value={filterText[params.field] || ""}
+                onChange={(e) => handleFilterChangeAndSearch(params.field, e.target.value, false)}
+                style={{ width: "80%", background: "#ffffff", borderRadius: "10px" }}
+                className="grid_search"
+              />
+            ) : fieldType === "datetime-local" ? (
+              <>
+              <div>
+      {/* Button to open modal */}
+      <Button style={{ width: "90%", background: "#ffffff", borderRadius: "10px", padding: "0px 30px", color: 'black' }}  variant="contained" size="small" onClick={() => setOpen(true)}>
+        Select Date
+      </Button>
+
+      {/* Date Picker Popup */}
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>Select Date Range</DialogTitle>
+        <DialogContent>
+          <TextField
+            type="date"
             variant="outlined"
             size="small"
-            value={filterText[params.field] || ""}
-            onClick={(e) => e.stopPropagation()} // Stop propagation to prevent sorting
-            onChange={(e) => handleFilterChange(params.field, e.target.value)}
-            style={{ width: "80%", background: "#ffffff", borderRadius:'10px' }}
-            className="grid_search"
-          /> */}
-          {/* <TextField
-  variant="outlined"
-  size="small"
-  value={filterText[params.field] || ""}
-  onClick={(e) => e.stopPropagation()} // Stop propagation to prevent sorting
-  onKeyDown={(e) => {
-    if (e.key === "Enter") {
-      handleFilterChangeAndSearch(params.field, e.target.value, true); // Trigger search on Enter
-    }
-  }}
-  onChange={(e) => handleFilterChangeAndSearch(params.field, e.target.value)}
-  style={{ width: "80%", background: "#ffffff", borderRadius: "10px" }}
-  className="grid_search"
-/> */}
-<TextField
- variant="outlined"
- size="small"
- onClick={(e) => e.stopPropagation()} // Stop propagation to prevent sorting
-  onKeyDown={(e) => {
-    if (e.key === "Enter") {
-      handleFilterChangeAndSearch(params.field, e.target.value, true); // Trigger search on Enter
-    }
-  }}
-  style={{ width: "80%", background: "#ffffff", borderRadius: "10px" }}
-  className="grid_search">
-
-</TextField>
-
-        </div>
-      ),
+            value={dateRange.startDate || ""}
+            onChange={handleDateChange(params.field, "startDate")}
+            style={{ width: "100%", marginBottom: "10px" }}
+            placeholder="Start Date"
+          />
+          <TextField
+            type="date"
+            variant="outlined"
+            size="small"
+            value={dateRange.endDate || ""}
+            onChange={handleDateChange(params.field, "endDate")}
+            style={{ width: "100%" }}
+            placeholder="End Date"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)} color="secondary">Cancel</Button>
+          <Button onClick={() => { 
+            handleDateSearch(params.field); 
+            setOpen(false);
+          }} color="primary">OK</Button>
+        </DialogActions>
+      </Dialog>
+    </div>
+              </>
+            ) : fieldType === "boolean" ? (
+              <Select
+                value={filterText[params.field] || ""}
+                onChange={(e) => handleFilterChangeAndSearch(params.field, e.target.value, false)}
+                displayEmpty
+                variant="outlined"
+                size="small"
+                style={{ width: "100%", background: "#ffffff", borderRadius: "10px", height: '20px' }}
+              >
+                <MenuItem disabled value="">Select</MenuItem>
+                <MenuItem value="Yes">Yes</MenuItem>
+                <MenuItem value="No">No</MenuItem>
+              </Select>
+            ) : (
+              <TextField
+                variant="outlined"
+                size="small"
+                value={filterText[params.field] || ""}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleFilterChangeAndSearch(params.field, e.target.value, false);
+                  }
+                }}
+                onChange={(e) => handleFilterChangeAndSearch(params.field, e.target.value, false)}
+                style={{ width: "80%", background: "#ffffff", borderRadius: "10px" }}
+                className="grid_search"
+              />
+            )}
+          </div>
+        );
+      },
     })),
   ];
-
-
   const [menuAnchor, setMenuAnchor] = useState(null);
   const openMenu = (event) => {
     setMenuAnchor(event.currentTarget);
@@ -784,31 +1122,33 @@ const handleViewReport = async () => {
     setMenuAnchor(null);
   };
 
-  const emailSelectedRows = () => {
-    // Filter the gridData to get the selected rows
+  const editSelectedRows = () => {
     const selectedData = gridData.filter((row) =>
       selectedRows.includes(row.id)
     );
-    // if (selectedData.length === 0) {
-    //   setError('No rows selected');
-    //   setTimeout(() => setError(''), 3000);
-    //   return;
-    // }
-    // console.log("Selected Data:", selectedData);
+    
+
+    if (selectedData.length === 0) {
+      setError('No rows selected');
+      setTimeout(() => setError(''), 3000);
+      return;
+    };
+     // Navigate to another component with selected data
+     navigate('/selected/edit', { state: { selectedData } });
+    
+  };
   
-    // Extract the caller_email from the selected rows and filter out invalid emails
+  const emailSelectedRows = () => {
+    const selectedData = gridData.filter((row) =>
+      selectedRows.includes(row.id)
+    );
     const emailAddresses = selectedData
       .map((row) => row.caller_email || row.email)  // Extract email addresses
       .filter((email) => typeof email === 'string' && email.trim() !== ""); // Remove undefined and empty emails
-  
-    // Log or store the email addresses as needed
-    console.log("Filtered Emails:", emailAddresses);
-  
-    // Return the filtered email addresses
+    
     return emailAddresses;
   };
   
-
   const exportSelectedRows = () => {
     const selectedData = gridData.filter((row) =>
       selectedRows.includes(row.id)
@@ -857,12 +1197,8 @@ const handleViewReport = async () => {
       document.body.removeChild(link);
     }
     
-    
   };
-  const openColumnModal = () => {
-    setTempVisibleColumns(columns);
-    setShowColumnModal(true);
-  };
+
   const handleCheckboxChange = (column, isChecked) => {
     setTempVisibleColumns((prev) => {
       if (isChecked) {
@@ -880,61 +1216,13 @@ const handleViewReport = async () => {
     exportSelectedRows();
   };
   const handleEmailClick = () => {
+    closeMenu();
     emailSelectedRows();
   };
-
-
-
-  // const handleCSVImport = (file) => {
-  //   Papa.parse(file, {
-  //     header: true,
-  //     complete: async (results) => {
-  //       const importedData = results.data;
-  //       console.log(importedData);
-  
-  //       try {
-  //         const response = await axios.post(`${config.apiUrl}/appdata/create`, { data: importedData }, {
-  //           headers: {
-  //             'Content-Type': 'application/json',
-  //           },
-  //         });
-  //         console.log('Success:', response.data);
-  //       } catch (error) {
-  //         if (error.response) {
-  //           // The request was made and the server responded with a status code
-  //           // that falls out of the range of 2xx
-  //           console.error('Error response:', error.response.data);
-  //           console.error('Error status:', error.response.status);
-  //           console.error('Error headers:', error.response.headers);
-  //         } else if (error.request) {
-  //           // The request was made but no response was received
-  //           console.error('Error request:', error.request);
-  //         } else {
-  //           // Something happened in setting up the request that triggered an Error
-  //           console.error('Error message:', error.message);
-  //         }
-  //         console.error('Error config:', error.config);
-  //       }
-  //     },
-  //     error: (error) => {
-  //       console.error("Error parsing CSV:", error);
-  //     }
-  //   });
-  // };
-
-
-  // const handleImportClick = () => {
-  //   const fileInput = document.createElement('input');
-  //   fileInput.type = 'file';
-  //   fileInput.accept = '.csv';
-  //   fileInput.onchange = (event) => {
-  //     const file = event.target.files[0];
-  //     if (file) {
-  //       handleCSVImport(file);
-  //     }
-  //   };
-  //   fileInput.click();
-  // };
+  const handleEditClick = () => {
+    closeMenu();
+    editSelectedRows();
+  };
 
   const handleSelectAllRows = (isChecked) => {
     if (isChecked) {
@@ -945,8 +1233,8 @@ const handleViewReport = async () => {
     }
   };
   
-  
   const handleRowSelection = (rowId, isChecked) => {
+
     setSelectedRows((prevSelectedRows) => {
       if (isChecked) {
         return [...prevSelectedRows, rowId];
@@ -963,10 +1251,7 @@ const handleViewReport = async () => {
     const currentPage = 1;
     const currentpageSize = event.target.value;
     handleChange({ target: { value: selectedValue } }, currentPage, currentpageSize);
-    // handleChange({ target: { value: selectedValue } });
-    // fetchGridData(); // Fetch grid data when the page size changes
-    console.log("page size", event.target.value);
-    // setPage(1); // Reset to the first page when the page size changes
+    
   };
   
   const handlePageInputChange = (e) => {
@@ -1001,6 +1286,23 @@ const handleViewReport = async () => {
   
   //Loader
   const [isLoading, setIsLoading] = useState(true); 
+
+  useEffect(() => {
+    if (pageName) {
+      setIsLoading(true); // Set the loader to true when pageName changes
+      setPage(1); // Reset to the first page when the pageName changes
+      setInputPage(1); // Reset the input page number when the pageName changes
+      setFilterText({}); // Reset all filter fields
+      setDateRange({ startDate: null, endDate: null }); // Reset date range
+    }
+  }, [pageName]);
+
+  useEffect(() => {
+    const savedColumns = sessionStorage.getItem(`visibleColumns_${pageName}`) || localStorage.getItem(`visibleColumns_${pageName}`);
+    if (savedColumns) {
+      setColumns(JSON.parse(savedColumns));
+    }
+  }, [pageName]);
 
   if (isLoading) {
     return <Loader />; // Use the Loader component here
@@ -1044,6 +1346,7 @@ const handleViewReport = async () => {
             xs: "center",
           },}}
       >
+        <div>{selectedRows.length} out of {pageSize}</div>
         <Button onClick={openMenu} className='Action-btn' sx={{ color:'white', background:'#212529' }} >
           Actions
         </Button>
@@ -1058,7 +1361,7 @@ const handleViewReport = async () => {
           </Button>
         </DialogActions>
       </Dialog>
-        {menuData.add && menuData.add.title && pageName !== 'reports' && pageName !== 'calls' && (
+        {menuData.add && menuData.add.title && pageName !== 'reports' && pageName !== 'calls' && pageName !== 'leads' &&(
           <Button 
             onClick={() => handleadd("add")} 
             className='Action-btn' 
@@ -1093,31 +1396,67 @@ const handleViewReport = async () => {
         onClose={closeMenu}>
             <MenuItem onClick={handleOpenImportModal}>Import Data</MenuItem>
             <MenuItem onClick={handleExportClick}>Export Data</MenuItem>
-            {/* <MenuItem onClick={handleEmailClick}>Send Email</MenuItem> */}
-
+            {pageName === 'leads' && (
+              <MenuItem onClick={handleEditClick}>Edit</MenuItem>
+            )}
         </Menu>
         
         <div className="dropdown" style={{ margin: "8px", width: "250px" }}>
-          <select
-            value={selectedValue}
-            onChange={handleChange}
-            style={{
-              color: "white",
-              background: "#464646",
-              width: "100%",
-              padding: "5px 10px",
-              borderRadius: "4px",
-              border: "1px solid #ced4da",
-              cursor: "pointer", // Add this line to change the cursor to a pointer
-            }}
-            aria-label="Without label"
-          >
-            {selectOptions.map((option, index) => (
-              <option key={index} value={JSON.stringify(option.filter)}>
-                {option.name}
-              </option>
-            ))}
-          </select>
+          <FormControl style={{ width: "250px" }}>
+  <Select
+    className="DropDown-select-option"
+    style={{
+      color: "white",
+      background: "rgb(70, 70, 70)",
+      width: "100%",
+      padding: "5px 10px",
+      borderRadius: "4px",
+      border: "1px solid rgb(206, 212, 218)",
+      cursor: "pointer",
+    }}
+    value={selectedValue}
+    onChange={handleChange}
+  >
+    {selectOptions.map((option, index) => (
+      <MenuItem
+      className="grid_menu_option_list"
+        key={index}
+        value={JSON.stringify(option.filter)}
+        style={{ display: "flex", justifyContent: "space-between" }}
+        onClick={(e) => {
+          handleFieldOption(index, option);
+        }}
+      >
+        <div>{option.name}</div>
+
+        <div className="grid_menu_btn">
+        <div className="grid_menu_edit_btn"
+          style={{ cursor: "pointer", color: "black", marginLeft: "10px" }}
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent dropdown from closing
+            handleEditOption(index, option);
+          }}
+        >
+          <EditNoteOutlinedIcon style={{height:'35px', width:'20px'}} />
+        </div>
+        <div className="grid_menu_delete_btn"
+          style={{ cursor: "pointer", color: "black", marginLeft: "10px"}}
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent dropdown from closing
+            handleDeleteOption(index, option);
+          }}
+        >
+          <DeleteIcon style={{height:'30px', width:'18px'}} />
+        </div>
+        </div>
+        
+      </MenuItem>
+    ))}
+    <MenuItem value="custom">Custom</MenuItem>
+  </Select>
+</FormControl>
+
+
         </div>
         </Box>
         <Box
@@ -1134,9 +1473,6 @@ const handleViewReport = async () => {
           },}}
       >
         <div style={{fontSize:'12px', display: 'flex', alignItems:'center'}}>
-        {/* <span style={{ marginLeft: "16px" }}>
-          Page {page} of {Math.ceil(totalRecord / pageSize)}
-        </span> */}
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div>Page</div>
           <div style={{ width: '40px', margin: '0 15px' }}> {/* Increased width to give more space */}
@@ -1179,7 +1515,6 @@ const handleViewReport = async () => {
               boxSizing: 'border-box', // Ensures padding doesn't affect width
             }}
           />
-
         </div>
         <div>of</div>
         <div  style={{ margin: '0 7px', width: '50px' }}>{Math.ceil(totalRecord / pageSize)}</div>
@@ -1188,8 +1523,6 @@ const handleViewReport = async () => {
           Total Rows:
         </span> 
         <span style={{width: '50px'}}>{totalRecord}</span>
-        
-        
         <Select
           value={pageSize}
           onChange={handlePageSizeChange}
@@ -1202,11 +1535,10 @@ const handleViewReport = async () => {
           <MenuItem value={75}>75</MenuItem>
         </Select>
         </div>
-       
         <Box>
       <Pagination
         count={Math.ceil(totalRecord / pageSize)}
-        siblingCount={0}
+        // siblingCount={0}
         page={page}
         onChange={handlePageChange}
         className="pagination_main"
@@ -1219,20 +1551,16 @@ const handleViewReport = async () => {
         
         <div style={{height:'calc(100vh - 140px)'}}>
           <DataGrid
-            // rows={filteredRows}
             rows={loading ? [] : filteredRows}
             columns={columnsWithFilter}
-            // pageSize={pageSize}
             paginationMode="server"
-            // rowCount={totalRows}
-            // onPageChange={handlePageChange}
-            // page={page - 1}
             disableSelectionOnClick
             getRowHeight={() => 35}
             className="custom-data-grid-main"
+            onSortModelChange={handleSortModelChange}
+            sortModel={sortModel}
             onRowDoubleClick={(params) => {
-              console.log("Row double-clicked:", params.row);
-              // handleNavigate("view", params.row);
+              
               handleDoubleClick("view", params)
             }}
             

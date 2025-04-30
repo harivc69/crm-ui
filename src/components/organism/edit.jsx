@@ -95,7 +95,19 @@ const validateForm = () => {
     validateForm,
   }));
 
-
+  useEffect(() => {
+    if (pageSchema.some(field => field.fieldName === 'Modified_at')) {
+      const nowUTC = new Date().toISOString().slice(0, 16); // Keep only YYYY-MM-DDTHH:mm
+      console.log("nowUTC (trimmed)", nowUTC);
+  
+      setFormData(prevState => ({
+        ...prevState,
+        Modified_at: nowUTC,
+      }));
+    }
+  }, [setFormData, pageSchema]);
+  
+  
   const renderInputField = (field) => {
     const isFileInput = field.type === 'file';
     const value = !isFileInput && (formData[field.fieldName] === 'N/A' ? '' : formData[field.fieldName] || '');
@@ -122,6 +134,7 @@ const validateForm = () => {
       commonProps.value = value;
     }
   
+    
     const formControlStyles = {
       display: 'flex',
       flexDirection: 'row',
@@ -169,6 +182,35 @@ const validateForm = () => {
         </FormControl>
       );
     }
+    
+    if (field.fieldName === 'Modified_at') {
+      const today = new Date();
+      const localTime = new Date(today.getTime()); // Adjust to local time
+      console.log("localTime",localTime)
+      const formattedLocalTime = localTime.toLocaleString(); // Format to local time string
+      console.log("formattedLocalTime",formattedLocalTime)
+
+    
+      return (
+        <FormControl className='details_page_inputs' key={field.fieldName} style={formControlStyles} error={!!isError}>
+          <label style={labelStyles}>{label}</label>
+          <TextField
+            className='edit-field-input'
+            {...commonProps}
+            sx={{
+              width: '50%',
+              textAlign: 'left',
+              color: '#666',
+              fontSize: '12px',
+            }}
+            value={formattedLocalTime}
+            type="text" // Force text type
+            disabled={field.display === 'disable'}
+          />
+        </FormControl>
+      );
+    }
+    
   
     switch (field.htmlControl) {
       case 'input':
@@ -190,6 +232,50 @@ const validateForm = () => {
             />
           </FormControl>
         );
+        case 'date':
+        return (
+          <FormControl className='details_page_inputs' key={field.fieldName} style={formControlStyles} error={!!isError}>
+            <label style={labelStyles}>{label}</label>
+            <TextField
+              className='edit-field-input'
+              {...commonProps}
+              sx={{
+                width: '50%',
+                textAlign: 'left',
+                color: '#666',
+                fontSize: '12px',
+              }}
+              type={field.type || 'text'} // Use "text" for datetime-local
+              inputProps={inputProps}
+              disabled={field.display === 'disable'}
+            />
+          </FormControl>
+        );
+
+
+        case 'audio':
+          return (
+            <FormControl
+              className="details_page_inputs"
+              key={field.fieldName}
+              style={formControlStyles}
+              error={!!isError}
+            >
+              <label style={labelStyles}>{label}</label>
+              <audio
+                className="edit-field-input edit-field-input-audio"
+                controls
+              >
+                {/* Dynamically set the src to the audio URL in formData */}
+                <source
+                  src={formData[field.fieldName] || ''}
+                  type={ 'audio/mpeg'}
+                />
+                Your browser does not support the audio element.
+              </audio>
+            </FormControl>
+          );
+        
       
       case 'textarea':
         // Check if the textarea has nested fields (like address)
@@ -289,7 +375,8 @@ const validateForm = () => {
                style={{
                 color: '#666',
               }}
-              disabled={field.display === 'disable'}
+              // disabled={field.display === 'disable'}
+              disabled={formData[field.fieldName] || field.display === "disable"}
 
                 className='edit-field-input'
                 name={field.fieldName}
