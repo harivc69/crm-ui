@@ -69,6 +69,11 @@ const AddComponent = forwardRef(({ formData, setFormData, pageSchema, onSaveSucc
         if (field.fieldName === 'assigned_to' &&
             (userData.role === 'Presales Team' || userData.role === 'Sales Team')) {
           initializedFormData[field.fieldName] = userName;
+          
+        }else if (field.fieldName === 'created_by' &&
+            (userData.role === 'Presales Team' || userData.role === 'Sales Team')) {
+          initializedFormData[field.fieldName] = userName;
+          
         } else if (field.type === 'checkbox') {
           initializedFormData[field.fieldName] = false;
         } else if (field.type === 'select') {
@@ -211,7 +216,7 @@ const AddComponent = forwardRef(({ formData, setFormData, pageSchema, onSaveSucc
       console.log("formattedLocalValue", formattedLocalValue)
 
       console.log("local", localValue)
-
+      
   
       return (
         <FormControl
@@ -249,7 +254,7 @@ const AddComponent = forwardRef(({ formData, setFormData, pageSchema, onSaveSucc
           <FormControl className='details_page_inputs' key={field.fieldName} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', width: '50%' }} error={!!isError}>
             <label style={{ width: '40%', textAlign: 'left' }}>{label}</label>
             <div style={{ width: '50%'}}>
-            <Select style={{width:'100% !important'}} className='edit-field-input' {...commonProps} displayEmpty>
+            <Select disabled={field.display === 'disable' || field.display === 'none'} style={{width:'100% !important'}} className='edit-field-input' {...commonProps} displayEmpty>
               <MenuItem value="">
                 <em>{field.placeholder || 'Select an option'}</em>
               </MenuItem>
